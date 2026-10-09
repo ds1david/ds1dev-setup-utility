@@ -32,12 +32,13 @@ try {
     Assert ($errors.Count -eq 0) 'Generated command is invalid'
     $shell = (Get-Process -Id $PID).Path
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
-    # NonInteractive makes the pause fail immediately; the catch must still preserve the error.
-    $savedPreference = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    $output = & $shell -NoLogo -NoProfile -NonInteractive -EncodedCommand $encoded 2>&1
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $savedPreference
+    # Capture native stderr directly: Windows PowerShell 5.1 does not reliably
+    # merge Console.Error into a PowerShell pipeline with 2>&1.
+    $stdout = Join-Path $root 'child.stdout'
+    $stderr = Join-Path $root 'child.stderr'
+    $child = Start-Process -FilePath $shell -ArgumentList "-NoLogo -NoProfile -NonInteractive -EncodedCommand $encoded" -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $code = $child.ExitCode
+    $output = (Get-Content -LiteralPath $stdout -Raw) + (Get-Content -LiteralPath $stderr -Raw)
     Assert ($code -eq 1) 'Child did not return failure'
     Assert (Test-Path -LiteralPath $log) 'Error was not persisted'
     Assert ((Get-Content -LiteralPath $log -Raw) -match 'DS1_HANDOFF_ROOT_CAUSE') 'Original cause was lost'
@@ -45,10 +46,9 @@ try {
     # A logging failure must not obscure the original error.
     $command = New-Ds1ElevationCommand -Body "throw 'DS1_NO_LOG_ROOT_CAUSE'" -ErrorLog (Join-Path $root 'missing/failure.log')
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
-    $ErrorActionPreference = 'Continue'
-    $output = & $shell -NoLogo -NoProfile -NonInteractive -EncodedCommand $encoded 2>&1
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $savedPreference
+    $child = Start-Process -FilePath $shell -ArgumentList "-NoLogo -NoProfile -NonInteractive -EncodedCommand $encoded" -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+    $code = $child.ExitCode
+    $output = (Get-Content -LiteralPath $stdout -Raw) + (Get-Content -LiteralPath $stderr -Raw)
     Assert ($code -eq 1 -and ($output | Out-String) -match 'DS1_NO_LOG_ROOT_CAUSE') 'Logging failure hid the cause'
 } finally { Remove-Item -LiteralPath $root -Recurse -Force }
 Write-Host "PASS: $count handoff checks (child process, no UAC or installation)."
