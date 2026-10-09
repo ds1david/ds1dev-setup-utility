@@ -25,3 +25,7 @@ Selecionar versões suportadas, não strings arbitrárias sem origem. Maven/Grad
 2. Implementar Test/Plan/Apply e estados.
 3. Implementar menu e fluxo interativo de versões.
 4. Testar em Windows limpo, Ubuntu WSL2 e MSYS2 reais, incluindo falhas, reboots e reruns.
+
+## Descoberta dinâmica implementada
+
+O catálogo ativo é formado por `runbooks/**/runbook.psd1`, com um handler PowerShell por runbook. A TUI não contém IDs fixos ou detectores por ferramenta. Novos runbooks aparecem após atualizar a cópia local e reiniciar ou pressionar R. O motor valida o grafo e chama Test/Plan/Apply pelo contrato comum; os dez instaladores históricos continuam planejados. Ver [contrato e exemplo de autoria](runbooks.md).

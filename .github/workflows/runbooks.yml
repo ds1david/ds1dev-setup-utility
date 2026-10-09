@@ -1,0 +1,15 @@
+name: Runbook contract
+on:
+  push:
+  pull_request:
+jobs:
+  contract:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate discovery and execution
+        shell: pwsh
+        run: ./tests/runbooks.tests.ps1

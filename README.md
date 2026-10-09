@@ -15,6 +15,7 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 - [07 — Verificação integrada](docs/07-validacao.md)
 - [08 — Backup e recuperação](docs/08-backup.md)
 - [Arquitetura do executor, segurança e idempotência](docs/arquitetura-executor.md)
+- [Adicionar runbooks sem alterar a TUI](docs/runbooks.md)
 
 ## Princípios
 
@@ -30,11 +31,14 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 
 O ponto de entrada planejado é `bootstrap.ps1`. **Não use `irm ... | iex` para baixar e executar código administrativo não revisado.** Prefira baixar o arquivo de uma release fixada, inspecionar sua assinatura/hash e depois executá-lo num PowerShell elevado.
 
-## Protótipo disponível (somente diagnóstico)
+## Executor e runbooks dinâmicos
 
 - `bootstrap.ps1`: exige administrador Windows, reconhece PowerShell 5.1/7, oferece instalação de PowerShell 7 e inicia o protótipo de TUI.
 - `src/ds1-setup.ps1`: lista tarefas, mostra bloqueios de dependências, permite `-Plan` e `-Validate`, registra transcrição da sessão e observações em `%ProgramData%\\DS1DevSetup`.
-- `config/catalog.psd1`: grafo inicial de tarefas. **Nenhuma tarefa está marcada como Implemented** e `-Apply` é bloqueado até implementação e testes. A seleção de versão já faz parte do contrato, mas os instaladores versionados ainda não existem.
+- `src/Runbooks.psm1`: descobre manifestos, valida dependências e executa handlers Test/Plan/Apply.
+- `runbooks/**/runbook.psd1`: catálogo descoberto por pasta. Adicionar manifesto e script é suficiente; pressione R para recarregar a cópia local. O antigo `config/catalog.psd1` não é consumido.
+- As dez tarefas históricas permanecem com `Implemented=$false`. Novos runbooks com Apply implementado podem ser executados; a verificação posterior é obrigatória. Os instaladores versionados históricos ainda não existem.
+- `tests/runbooks.tests.ps1`: testes sem módulos externos para descoberta, execução e validação do contrato.
 
 Para uso local, após revisar o conteúdo:
 

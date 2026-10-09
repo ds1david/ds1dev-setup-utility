@@ -75,3 +75,5 @@ Docker pode ser instalado após WSL2 estar operacional; seus testes completos de
 02 Windows → 03 WSL2 → 04 MSYS2 → 05 workspaces → 02.1/03.1/04.1 toolchains → 06 shells → 06.1 IDEs → 07 validação → 08 backup.
 
 Ações dependentes de ferramentas devem permanecer bloqueadas até que a respectiva preparação seja validada. Os IDs numéricos representam **documentação**, enquanto os IDs estáveis do catálogo devem ser independentes da numeração.
+
+- [Runbooks dinâmicos — adicionar tarefas sem alterar a TUI](runbooks.md)
