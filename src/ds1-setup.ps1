@@ -31,16 +31,21 @@ function Test-Step([string]$id) {
     '02.1' { return (Get-Command git -ErrorAction SilentlyContinue) -and (Get-Command java -ErrorAction SilentlyContinue) }
     '03' {
       if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) { return $false }
-      $out = & wsl.exe --list --quiet 2>$null
-      return ($LASTEXITCODE -eq 0 -and [bool]($out -match 'Ubuntu'))
+      $out = @(& wsl.exe --list --quiet 2>$null)
+      if ($LASTEXITCODE -ne 0) { return $false }
+      $ubuntu = @($out | ForEach-Object { ($_ -replace '[\u0000]', '').Trim() } | Where-Object { $_ -match '^Ubuntu' } | Select-Object -First 1)
+      if ($ubuntu.Count -eq 0) { return $false }
+      $distro = $ubuntu[0]
+      $null = & wsl.exe -d $distro -- /bin/sh -c 'test -f /etc/os-release && uname -s' 2>$null
+      return ($LASTEXITCODE -eq 0)
     }
-    '03.1' { return (Test-Step '03') }
+    '03.1' { return $false }
     '04' { return (Test-Path 'C:\msys64\usr\bin\bash.exe') }
-    '04.1' { return (Test-Step '04') }
+    '04.1' { return $false }
     '05' { return (Test-Path 'C:\workspace\local\config') }
     '06' { return (Test-Path 'C:\workspace\local\config\powershell') }
     '06.1' { return [bool](Get-Command code -ErrorAction SilentlyContinue) }
-    '07' { return $true }
+    '07' { return $false }
     default { return $false }
   }
 }
@@ -48,6 +53,18 @@ function Get-Step([string]$id) {
   $match = @($Catalog.Tasks | Where-Object { $_.Id -eq $id })
   if ($match.Count -ne 1) { throw "Tarefa desconhecida: $id" }
   return $match[0]
+}
+function Write-Observation([string]$id,[bool]$found) {
+  $entry = [ordered]@{
+    taskId = $id
+    host = $env:COMPUTERNAME
+    platform = 'Windows'
+    observed = $found
+    observedAt = (Get-Date).ToString('o')
+    note = 'Observacao atual; nao comprova instalacao completa nem representa Apply bem-sucedido'
+  }
+  $path = Join-Path $StateHome ("observed-" + ($id -replace '[^a-zA-Z0-9.]','_') + ".json")
+  $entry | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $path -Encoding UTF8
 }
 function Get-Status([string]$id) {
   $step = Get-Step $id
@@ -67,6 +84,7 @@ function Invoke-Step([string]$id,[string]$mode,[string]$requestedVersion) {
   if ($mode -eq 'Test') {
     $detected = [bool](Test-Step $id)
     Write-Host "Detector: $detected"
+    Write-Observation $id $detected
     return
   }
   if ($mode -eq 'Plan') {
