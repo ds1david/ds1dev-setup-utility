@@ -52,3 +52,5 @@ try {
     Assert ($code -eq 1 -and ($output | Out-String) -match 'DS1_NO_LOG_ROOT_CAUSE') 'Logging failure hid the cause'
 } finally { Remove-Item -LiteralPath $root -Recurse -Force }
 Write-Host "PASS: $count handoff checks (child process, no UAC or installation)."
+# The failing child is intentional. Do not report its exit code as the test step's result.
+$global:LASTEXITCODE = 0

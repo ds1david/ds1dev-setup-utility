@@ -20,6 +20,7 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 - [Perfis YAML v2: imagens WSL/MSYS2 e versões comuns](docs/perfis-ambientes-versoes-v2.md)
 - [Script runner v2: interpretadores, variáveis, streams, logs e erros](docs/script-runner-v2.md)
 - [Plano detalhado de execução e critérios de aceite](docs/plano-de-execucao.md)
+- [Guia prático de testes: CI, Windows parcial e instalação limpa](docs/guia-de-testes.md)
 
 ## Princípios
 
