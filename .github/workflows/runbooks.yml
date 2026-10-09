@@ -18,9 +18,11 @@ jobs:
         run: |
           ./tests/bootstrap.tests.ps1
           ./tests/bootstrap-handoff.tests.ps1
+          ./tests/bootstrap-discovery.tests.ps1
       - name: Validate native Windows PowerShell 5.1 compatibility
         if: runner.os == 'Windows'
         shell: powershell
         run: |
           ./tests/bootstrap.tests.ps1
           ./tests/bootstrap-handoff.tests.ps1
+          ./tests/bootstrap-discovery.tests.ps1

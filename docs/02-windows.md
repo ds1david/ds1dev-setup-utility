@@ -204,3 +204,9 @@ Quando for usar Windows containers, arquivos e binds específicos podem ficar em
 Se o processo elevado falhar, o bootstrap deve mostrar a exceção original na janela elevada, aguardar Enter e reproduzir o diagnóstico na sessão original. O caminho `ds1dev-setup-<id>/elevation-error.log` é mostrado antes da elevação. Esse log cobre inclusive falhas anteriores ao início da transcrição administrativa.
 
 O primeiro teste real em PowerShell 5.1 retornou apenas código 1. Foi identificado e corrigido um erro no tratamento da exceção: `Write-Error` com preferência `Stop` interrompia o próprio catch antes da pausa. Também foi adicionada conversão explícita de bytes UTF-8 para texto no download remoto, para não passar conteúdo binário a `ScriptBlock.Create`. A causa inicial desse teste ainda depende do novo diagnóstico; não confundir a correção de observabilidade com homologação completa do bootstrap.
+
+### Candidato PowerShell inacessível
+
+O segundo teste de campo identificou `IOException` em `Get-AuthenticodeSignature`, durante a descoberta de PowerShell. Agora a busca registra o caminho e continua nos demais candidatos. Também consulta a instalação real dos pacotes MSIX/Store antes dos aliases do PATH, que podem não ser legíveis como executáveis comuns. O log fornecido não identificava o caminho, portanto a hipótese de alias Store ainda não está confirmada.
+
+A assinatura Microsoft continua obrigatória antes de executar cada candidato. Não alterar permissões de WindowsApps nem desabilitar a verificação. Se nenhum candidato puder ser validado, o bootstrap oferece a instalação oficial somente após consentimento.

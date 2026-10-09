@@ -66,7 +66,7 @@ function Get-Ds1NativeArchitecture {
     }
 }
 
-function Get-Ds1PowerShell {
+function Get-Ds1PowerShellCandidates {
     $candidates = @()
     # Prefer the current runtime if it is already PowerShell 7.
     if ($PSVersionTable.PSVersion.Major -eq 7) {
@@ -78,18 +78,49 @@ function Get-Ds1PowerShell {
             $candidates += Join-Path $root 'Microsoft\PowerShell\7\pwsh.exe'
         }
     }
+    # Store execution aliases may not be readable as ordinary PE files. Probe
+    # the real package executable first, without taking ownership of WindowsApps.
+    if (Get-Command Get-AppxPackage -ErrorAction SilentlyContinue) {
+        try {
+            foreach ($package in @(Get-AppxPackage -Name 'Microsoft.PowerShell*' -ErrorAction Stop)) {
+                if ($package.InstallLocation) {
+                    $candidates += Join-Path $package.InstallLocation 'pwsh.exe'
+                }
+            }
+        } catch { Write-Warning "Nao foi possivel consultar PowerShell MSIX: $($_.Exception.Message)" }
+    }
     $candidates += @(Get-Command pwsh.exe -CommandType Application -All -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
-    foreach ($candidate in @($candidates | Select-Object -Unique)) {
-        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { continue }
-        # Do not execute an arbitrary pwsh.exe planted on PATH in an elevated process.
-        $signature = Get-AuthenticodeSignature -LiteralPath $candidate
-        if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation(?:,|$)') { continue }
-        $versionOutput = & $candidate -NoLogo -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()'
-        if ($LASTEXITCODE -ne 0) { continue }
-        $versionText = ($versionOutput | Out-String).Trim()
-        $version = $null
-        if ([version]::TryParse($versionText, [ref]$version) -and $version.Major -eq 7 -and $version -ge [version]'7.4') {
-            return [pscustomobject]@{ Path = $candidate; Version = $versionText }
+    return @($candidates | Where-Object { $_ } | Select-Object -Unique)
+}
+
+function Get-Ds1PowerShellVersion([string]$Path) {
+    $output = & $Path -NoLogo -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()'
+    if ($LASTEXITCODE -ne 0) { throw "Consulta de versao terminou com codigo $LASTEXITCODE." }
+    return ($output | Out-String).Trim()
+}
+
+function Get-Ds1PowerShell {
+    [CmdletBinding()]
+    param()
+    foreach ($candidate in @(Get-Ds1PowerShellCandidates)) {
+        try {
+            if (-not (Test-Path -LiteralPath $candidate -PathType Leaf -ErrorAction Stop)) { continue }
+            # Failure to read one alias/file must not abort discovery of other installs.
+            # Never execute a candidate unless its Microsoft signature has been verified.
+            $signature = Get-AuthenticodeSignature -LiteralPath $candidate -ErrorAction Stop
+            if ($signature.Status -ne 'Valid' -or -not $signature.SignerCertificate -or
+                $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation(?:,|$)') {
+                Write-Warning "Candidato ignorado (assinatura Microsoft nao validada): $candidate"
+                continue
+            }
+            $versionText = Get-Ds1PowerShellVersion -Path $candidate
+            $version = $null
+            if ([version]::TryParse($versionText, [ref]$version) -and $version.Major -eq 7 -and $version -ge [version]'7.4') {
+                return [pscustomobject]@{ Path = $candidate; Version = $versionText }
+            }
+            Write-Warning "Candidato ignorado (versao incompativel: $versionText): $candidate"
+        } catch {
+            Write-Warning "Candidato PowerShell inacessivel ou nao executavel: $candidate | $($_.Exception.Message)"
         }
     }
     return $null
