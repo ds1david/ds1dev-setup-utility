@@ -77,3 +77,7 @@ Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e 
 
 
 - [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](docs/tui-windows.md)
+
+## Desenvolvimento orientado a specs (Codex)
+
+As specs incrementais, critérios de aceite e gates estão em [`docs/phase-gates.md`](docs/phase-gates.md). Leia [`AGENTS.md`](AGENTS.md), [`docs/codex-speckit.md`](docs/codex-speckit.md) e [rastreabilidade Notion ↔ runbooks](docs/notion-runbook-traceability.md). **A geração das skills oficiais do Spec Kit ainda depende de executar `specify init` localmente**; as specs publicadas não significam que as funcionalidades foram implementadas.
