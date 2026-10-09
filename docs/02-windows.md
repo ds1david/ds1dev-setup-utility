@@ -1,72 +1,67 @@
 # 02 — Preparação Windows
 
-> Documento migrado do Notion e reorganizado. **Revise caminhos, versões e efeitos antes de aplicar.** A instalação deve ser testada em máquina de laboratório e reexecutada para validar idempotência.
+[Índice](01-indice.md) · [Toolchain Windows](02.1-toolchain-windows.md) · [Plano](plano-de-execucao.md)
 
+## Entrada em Windows limpo ou existente
 
-## 1. Pré-requisitos e diagnóstico
-**Ponto de partida:** Windows 11 já instalado, conta com permissões necessárias, conexão à internet e WinGet (App Installer). **Não crie ainda** links/mounts de WSL/MSYS2 ou a estrutura definitiva; isso ocorrerá depois de instalar os três ambientes.
+O mínimo de entrada é Windows 11 suportado com Windows PowerShell 5.1, rede e autorização administrativa. **WinGet, PowerShell 7 e Windows Terminal não são presumidos instalados.**
+
+O `bootstrap.ps1` verifica UAC e elevação, solicita autorização para elevar e procura PowerShell 7 estável compatível (mínimo 7.4). Se ausente, oferece MSI oficial 7.6.6, com SHA-256 e assinatura Microsoft verificados, sem exigir WinGet. Se presente, reutiliza. UAC já faz parte do Windows e não é instalado pelo script. Uma conta diferente na elevação é bloqueada para proteger o escopo do usuário.
+
+O bootstrap tem testes isolados; a execução completa no Windows limpo ainda requer homologação. Os runbooks de preparação continuam pendentes. Consulte o [plano M1/M5](plano-de-execucao.md).
+
+## Preparação básica
+
+Inventariar antes de modificar. O runbook deverá instalar/configurar WinGet (App Installer oficial), Windows Terminal e utilitários selecionados; PowerShell 7 já deve ser reaproveitado do bootstrap. A ausência de WinGet é trabalho desta preparação, não motivo para impedir o bootstrap. Não atualizar todos os pacotes existentes indiscriminadamente.
+
+Diagnóstico no PowerShell 7:
+
 ```powershell
-winver
-winget --version
+$PSVersionTable
+Get-Command winget.exe,pwsh.exe -ErrorAction SilentlyContinue
 Get-ComputerInfo | Select-Object WindowsProductName,OsBuildNumber,HyperVisorPresent
 ```
-Se WinGet não existir, atualizar o App Installer por fonte oficial Microsoft. O Windows 11 permanece o host das IDEs gráficas e do Docker Desktop.
-## 2. Instalação do ambiente e utilitários essenciais
-Abra **PowerShell**, com elevação somente quando o instalador solicitar:
+
+Quando WinGet já estiver funcional, os exemplos abaixo são comandos manuais a revisar; não substituem os futuros runbooks idempotentes:
+
 ```powershell
-winget search --id Microsoft.PowerShell -e
 winget search --id Microsoft.WindowsTerminal -e
-winget source update
-winget install --id Microsoft.PowerShell -e --accept-package-agreements --accept-source-agreements
-winget install --id Microsoft.WindowsTerminal -e --accept-package-agreements --accept-source-agreements
+winget install --id Microsoft.WindowsTerminal -e --accept-source-agreements --accept-package-agreements
 ```
-PowerShell 7 usa `pwsh.exe` e não substitui o Windows PowerShell 5.1. Abra uma sessão PowerShell 7 depois da instalação.
-## 3. Atualizações, reinicialização e PATH
+
+PowerShell 5.1 permanece disponível. Perfis e personalização pertencem a [06](06-shells.md); instalações/variáveis/validações de Git, Python, Java, Maven, Gradle e utilitários de desenvolvimento pertencem a [02.1](02.1-toolchain-windows.md).
+
+### 4.2 Instalar Sysinternals Suite
+Pacote Microsoft de administração e diagnóstico: Process Explorer, Process Monitor, Autoruns, TCPView, Handle, PsExec e outras ferramentas. O pacote contém utilitários avançados; algumas exigem elevação e aceitação da licença na primeira execução.
 ```powershell
-winget source update
-winget upgrade
-winget --version
-pwsh --version
-```
-`winget upgrade` apenas mostra atualizações; revise cada pacote antes de instalar. Execute Windows Update pelo painel Configurações e reinicie quando solicitado. Reabra Windows Terminal após instalações que alterem o PATH. Se o ícone do Terminal ficar genérico, tente Reparar nas opções avançadas do aplicativo; não use Redefinir sem backup.
-## 4. Instalação de dependências e ferramentas Windows
-## 5. Integração com Windows Terminal
-**Perfis PowerShell 5.1 e PowerShell 7:** ambos serão conectados ao inicializador nativo Windows `C:\workspace\local\config\powershell\init.ps1` pelo (consulte índice deste repositório) após criar a estrutura. O PATH do usuário inclui `C:\workspace\local\bin` uma única vez, compartilhado pelas duas edições PowerShell.
-Abra Windows Terminal → Configurações (`Ctrl+,`) → Inicialização → Perfil padrão → **PowerShell** apontando para `pwsh.exe`, não `powershell.exe` (5.1). Se necessário, crie perfil com `C:\Program Files\PowerShell\7\pwsh.exe`. Preserve PowerShell 5.1.
-Os perfis Ubuntu e MSYS2 UCRT64 serão criados/validados nas etapas 02 e 03.
-## 6. Validação final antes da próxima etapa
-```powershell
-$PSVersionTable | Select-Object PSVersion,PSEdition
-(Get-Process -Id $PID).Path
-git --version
-py --list
-py -3.13 --version
-python --version
+winget search --id Microsoft.Sysinternals.Suite -e
+winget install --id Microsoft.Sysinternals.Suite -e --accept-source-agreements --accept-package-agreements
 winget list --id Microsoft.Sysinternals.Suite -e
-winget list --id gerardog.gsudo -e
-winget list --id Notepad++.Notepad++ -e
-winget list --id 7zip.7zip -e
-winget list --id RARLab.WinRAR -e
 ```
-Esperado: versão principal 7, PSEdition Core e processo pwsh.exe. `python` pode resolver um alias da Store: nesse caso valide primeiro `py -3.13` e corrija o alias/PATH. Sysinternals pode não colocar executáveis individuais no PATH.
-## 7. Dependências das próximas etapas
-**Próxima:** Etapa 02 instala WSL2/Ubuntu; Etapa 03 instala MSYS2 UCRT64. Somente depois siga (consulte índice deste repositório); Docker Desktop na subpágina **01.01 — Docker Desktop no Windows: pré-requisitos, instalação e engine**, e VS Code/IntelliJ pelo (consulte índice deste repositório).
-## Checklist
-- [ ] Windows 11 e WinGet validados
-- [ ] PowerShell 7/Terminal instalados, atualizações e reinicializações concluídas
-- [ ] Git e Python 3.13 instalados e validados
-- [ ] OpenJDK Temurin 21 instalado pelo WinGet
-- [ ] Maven obtido do ZIP oficial e validado por SHA-512
-- [ ] MAVEN_HOME e PATH idempotentes; Maven validado em nova sessão
-- [ ] JAVA_HOME detectado e configurado; java e javac 21 encontrados no PATH
-- [ ] Gradle baixado em ZIP oficial, hash SHA-256 conferido, GRADLE_HOME e PATH configurados e validados
-- [ ] Sysinternals, gsudo, Notepad++, 7-Zip e WinRAR instalados
-- [ ] PowerShell 7 definido como perfil padrão do Windows Terminal
-- [ ] Validação geral aprovada; apto para Etapa 02
----
+**Atenção:** versões anteriores do manifesto da suíte já apresentaram falha de hash quando o arquivo ZIP oficial mudou. **Nunca desabilite verificação de hash ou integridade** para contornar. Se ocorrer, obtenha a suíte pela [página oficial da Microsoft](https://learn.microsoft.com/pt-br/sysinternals/downloads/sysinternals-suite), confira integridade e extraia em uma pasta apropriada de ferramentas Windows; registre a instalação. O pacote WinGet pode não adicionar todos os utilitários individualmente ao PATH. Valide o diretório instalado com `winget list` e localize `procexp64.exe`, `procmon64.exe` ou equivalentes na instalação, em vez de presumir que todos funcionarão pelo nome no terminal.
+### 4.3 Instalar gsudo
+`gsudo` permite solicitar elevação de **comandos Windows** a partir do PowerShell ou Terminal. Não substitui autorização administrativa, não concede permissões inexistentes e **não é o sudo Linux**.
+```powershell
+winget search --id gerardog.gsudo -e
+winget install --id gerardog.gsudo -e --accept-source-agreements --accept-package-agreements
+```
+Feche e reabra os terminais para atualizar o PATH. Valide:
+```powershell
+Get-Command gsudo -ErrorAction SilentlyContinue
+gsudo --version
+gsudo whoami /groups
+```
+A última linha pode solicitar confirmação do Controle de Conta de Usuário (UAC). Use `gsudo` somente para comandos específicos que exigem elevação; evite trabalhar em um shell elevado permanentemente. Se precisar usar o gsudo dentro do MSYS2, configure a integração Bash separadamente após instalar o UCRT64.
 
+## Aceite da preparação básica
 
-[Voltar ao índice](01-indice.md)
+- [ ] PS7 compatível disponível, com PS5.1 preservado
+- [ ] WinGet funcional ou diagnóstico de bloqueio explícito
+- [ ] Terminal e utilitários selecionados validados
+- [ ] Instalações preexistentes preservadas
+- [ ] Reinício pendente tratado antes das tarefas dependentes
+
+WSL (03) e MSYS2 (04) são preparações independentes após esta base. Docker é uma subetapa opcional abaixo: sua dependência de WSL não deve bloquear nem criar ciclo no preparo básico Windows.
 
 ## Docker Desktop no Windows
 
@@ -74,7 +69,7 @@ Esperado: versão principal 7, PSEdition Core e processo pwsh.exe. `python` pode
 ## Objetivo
 Docker Desktop instalado **somente no Windows**, com WSL2 como backend preferencial. A execução de Linux e Windows containers é mutuamente exclusiva e exige troca deliberada de engine. Pré-requisitos da etapa 01 e instalação do WSL da etapa 02.
 ## 1. Preparar o Windows ANTES de instalar o Docker Desktop
-**Dependências:** Windows 11 já instalado → Etapa 01 (PowerShell 7/Terminal/WinGet) → Etapa 02 (WSL2/Ubuntu instalado e testado) → Etapa 03 (MSYS2 UCRT64 instalado e Terminal configurado) → estrutura comum Windows (guia B). Execute os diagnósticos abaixo no **PowerShell 7 elevado (Executar como administrador)** quando for alterar recursos do Windows. Os comandos de inspeção podem ser executados normalmente sem elevação.
+**Dependências:** preparação básica Windows concluída e WSL2 operacional (03). MSYS2 não é requisito do Docker Desktop. Wrappers e diretórios personalizados dependem do workspace correspondente (05). Execute os diagnósticos abaixo no **PowerShell 7 elevado (Executar como administrador)** quando for alterar recursos do Windows. Os comandos de inspeção podem ser executados normalmente sem elevação.
 ### 1.1 Verificar sistema, arquitetura, RAM, BIOS/UEFI e virtualização
 ```powershell
 Get-ComputerInfo | Select-Object WindowsProductName,WindowsVersion,OsBuildNumber,OsArchitecture,HyperVisorPresent

@@ -38,21 +38,28 @@ Em instalações MSYS2 fora de `C:\msys64`, ajuste o diretório físico do `/wor
 - MSYS2 Bash: `~/.bashrc` importa `/workspace/local/config/bash/init.bash` próprio do MSYS2.
 - Completion, aliases e Oh My Posh são opcionais, separados por shell; caches em `dev/cache`. Inicialização não realiza builds nem downloads silenciosos.
 - Variáveis `JAVA_HOME`, `MAVEN_HOME`, `GRADLE_HOME` são nativas de cada SO. Windows usa WinGet para Temurin e ZIP oficial para Maven/Gradle; Ubuntu usa SDKMAN; UCRT64 usa toolchain do pacman.
-## Mapa de dependências
+## Mapa de dependências alvo
+
+A numeração organiza a leitura; ambientes opcionais não bloqueiam os demais. O catálogo atual ainda possui tarefas agregadas: a decomposição é trabalho do marco M4.
+
 ```mermaid
 flowchart TD
- W[01 Windows e dependências] --> U[02 Ubuntu WSL2 e dependências]
- U --> M[03 MSYS2 UCRT64 e dependências]
- M --> B[B Diretórios Windows]
- B --> C[C Diretórios Ubuntu ext4]
- C --> E[E Diretórios MSYS2]
- U --> DW[01.01 Docker Desktop Windows]
- DW --> DU[02.01 Docker no Ubuntu]
- E --> T[06 Toolchains avançadas]
- DU --> V[09 Verificação integrada]
- T --> V
+ B["Bootstrap 5.1/7 e UAC"] --> W["02 Windows básico"]
+ W --> U["03 Ubuntu WSL2"]
+ W --> M["04 MSYS2"]
+ W --> PW["05 Workspace Windows"]
+ U --> PU["05 Workspace Ubuntu"]
+ M --> PM["05 Workspace MSYS2"]
+ PW --> TW["02.1 Toolchain Windows"]
+ PU --> TU["03.1 Toolchain Ubuntu"]
+ PM --> TM["04.1 Toolchain MSYS2"]
 ```
-Docker pode ser instalado após WSL2 estar operacional; seus testes completos dependem das estruturas criadas nos guias B/C/E. Windows instala IDEs apenas no guia F.
+
+Docker Desktop/integração são subetapas com requisitos próprios em 02/03. Shells (06) dependem do workspace correspondente; completions dependem das ferramentas selecionadas. IDEs e integrações (06.1), validação (07) e backup (08) seguem seus escopos.
+
+- [Plano de execução completo: marcos, dependências e aceite](plano-de-execucao.md)
+- [Bootstrap e arquitetura do executor](arquitetura-executor.md)
+
 ## Segurança e integridade
 - Não substituir caminhos, mounts, PATH ou dados preexistentes sem inventário e backup.
 - O PATH deve ser idempotente: preservar entradas existentes e evitar duplicação por diferenças de barras e caixa.

@@ -4,7 +4,7 @@
 
 
 ## 1. Pré-requisitos e diagnóstico
-Concluir etapas 01 (Windows/PowerShell/Terminal/Git/Python) e 02 (Ubuntu WSL2 instalado e validado). **Não criar diretórios nem links do workspace agora**; os guias B/E dependem do MSYS2 instalado. MSYS2 é um ambiente POSIX para compilar binários Windows em NTFS, não um filesystem separado.
+Concluir a preparação básica Windows (02). Ubuntu, Git e Python não são pré-requisitos. Após validar MSYS2, criar seu workspace nativo (05). MSYS2 é um ambiente POSIX para compilar binários Windows em NTFS, não um filesystem separado.
 **Fonte oficial:** [MSYS2 — instalação e downloads](https://www.msys2.org/). Consulte também [ambientes](https://www.msys2.org/docs/environments/) e [pacotes](https://packages.msys2.org/).
 ## 2. Instalação do MSYS2 UCRT64
 No PowerShell 7:
@@ -31,35 +31,18 @@ Windows Terminal → Configurações (`Ctrl+,`) → Adicionar perfil → Novo pe
 - **Linha de comando:** `C:\msys64\msys2_shell.cmd -defterm -here -no-start -ucrt64` (ajuste para diretório real).
 - **Diretório inicial:** `%USERPROFILE%` enquanto `C:\workspace` não existir; depois pode usar `C:\workspace`.
 - **Ícone:** selecione um ícone válido do próprio MSYS2 se encontrado.
-Salve, abra nova aba, confira `echo "$MSYSTEM"` = `UCRT64` e `command -v gcc` apontando para `/ucrt64/bin/gcc`. PowerShell 7 continua perfil padrão.
-## 6. Validação de pacotes e compilação
-```bash
-echo "$MSYSTEM"
-command -v git gcc g++ make autoconf automake libtool cmake ninja
-git --version
-gcc --version
-gcc -dumpmachine
-autoconf --version | head -n 1
-automake --version | head -n 1
-libtool --version | head -n 1
-cmake --version | head -n 1
-ninja --version
-tmp="$(mktemp -d)"
-printf '#include <stdio.h>\nint main(void){puts("UCRT64 OK");return 0;}\n' > "$tmp/check.c"
-gcc "$tmp/check.c" -o "$tmp/check.exe"
-"$tmp/check.exe"
-rm -rf -- "$tmp"
-```
-Esperado: MSYSTEM=UCRT64, compilador GCC em `/ucrt64/bin` e o teste imprimindo `UCRT64 OK`. Algumas ferramentas Autotools residem em `/usr/bin`.
+Salve, abra nova aba, confira `echo "$MSYSTEM"` = `UCRT64` ; a validação de GCC pertence à toolchain. PowerShell 7 continua perfil padrão.
+## 6. Validação da preparação
+
+No Bash MSYS2, verificar `echo "$MSYSTEM"` retornando `UCRT64`, `pacman --version` e caminho da instalação. GCC, Git e compilação serão validados em [04.1](04.1-toolchain-msys2.md).
+
 ## 7. Dependências das próximas etapas
 A estrutura MSYS2 e o PATH próprio são documentados no (consulte índice deste repositório). Use /workspace/local/\{bin,env,config\} dentro da instalação MSYS2, jamais /opt/local/bin ou /c/workspace/local/bin como substituto.
 Seguir (consulte índice deste repositório), (consulte índice deste repositório), (consulte índice deste repositório). Não criar estrutura enquanto falta ambiente.
 ## Checklist
 - [ ] Instalador de fonte oficial, diretório da instalação registrado
 - [ ] pacman atualizado (reabertura UCRT64 quando necessária)
-- [ ] Git, GCC/G++, Autotools, CMake e Ninja disponíveis
 - [ ] Perfil UCRT64 criado no Windows Terminal e validado
-- [ ] Compilação de teste aprovada
 - [ ] Pronto para criar estruturas de pastas
 ---
 

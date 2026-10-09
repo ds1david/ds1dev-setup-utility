@@ -4,7 +4,7 @@
 
 
 ## 1. Pré-requisitos e diagnóstico
-Windows 11 e Etapa 01 concluídos. **Não executar ainda** os guias B/C de criação de diretórios/mounts: primeiro instale/valide Ubuntu e depois MSYS2 UCRT64.
+Windows 11 e [preparação básica Windows (02)](02-windows.md) concluídos. MSYS2 não é dependência do Ubuntu.
 No PowerShell 7 (eleve apenas se o WSL solicitar):
 ```powershell
 wsl --version
@@ -36,73 +36,25 @@ Não execute `wsl --shutdown` enquanto estiver usando uma sessão Linux ou com s
 Instalações atuais do WSL geralmente geram um perfil Ubuntu automaticamente no Windows Terminal. Abra uma nova aba Ubuntu e confira `pwd`, `whoami` e `uname -a`. Caso não apareça, em Configurações → Adicionar um novo perfil → Novo perfil vazio, crie perfil **Ubuntu (WSL2)** com linha de comando `wsl.exe -d Ubuntu-24.04` (ajuste para o nome listado) e diretório inicial padrão do usuário Linux. Preserve PowerShell 7 como perfil padrão.
 VS Code e IntelliJ continuarão instalados no Windows; configuração de `code .` e `idea .` no (consulte índice deste repositório).
 ## 6. Validação do ambiente
-Execute **depois de instalar todas as dependências da seção 4, inclusive SDKMAN, Java 21, Maven e Gradle**, preferencialmente em uma nova aba Ubuntu do Windows Terminal. Não confunda os executáveis Linux com os do Windows.
-### 6.1 Validar Ubuntu, Git, Python e compiladores
-```bash
-printf 'Usuario: '; whoami
-uname -r
-git --version
-python3 --version
-python --version
-python3 -m pip --version
-gcc --version | head -n 1
-python3 -m venv /tmp/workspace-python-test
-/tmp/workspace-python-test/bin/python --version
-rm -rf -- /tmp/workspace-python-test
-test -d /mnt/c && echo WINDOWS_MOUNT_OK
+
+No PowerShell, use o nome real da distribuição:
+
+```powershell
+wsl.exe --list --verbose
+# Substitua pelo nome da distribuição escolhida antes de executar.
+wsl.exe -d Ubuntu-24.04 -- bash -lc 'id; uname -r'
 ```
-### 6.2 Validar SDKMAN e inicialização persistente
-```bash
-test -s "$HOME/.sdkman/bin/sdkman-init.sh" || { echo 'SDKMAN não instalado'; exit 1; }
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-type sdk
-sdk version
-sdk current
-```
-`sdk` normalmente é uma função do shell, não um arquivo executável. A inicialização deve funcionar também em um **novo Bash interativo** sem executar `source` manualmente; se não funcionar, confira a configuração de inicialização em `~/.bashrc`.
-### 6.3 Validar Java OpenJDK 21, JAVA_HOME, Maven e Gradle
-```bash
-java -version
-javac -version
-printf 'JAVA_HOME=%s\n' "$JAVA_HOME"
-test -n "$JAVA_HOME" && test -x "$JAVA_HOME/bin/javac" && echo JAVA_HOME_OK
 
-mvn -version
-gradle --version
+Exigir WSL versão 2 e usuário Linux inicializado. A presença de wsl.exe não basta. Git, Python, SDKMAN e builds são validados em [03.1](03.1-toolchain-ubuntu.md), após o workspace nativo estar pronto.
 
-command -v java
-command -v javac
-command -v mvn
-command -v gradle
+## Próximos passos e aceite
 
-readlink -f "$(command -v java)"
-readlink -f "$(command -v mvn)"
-readlink -f "$(command -v gradle)"
-sdk current java
-sdk current maven
-sdk current gradle
-```
-**Resultado esperado:** `java -version` e `javac -version` retornam a linha 21; Maven e Gradle executam usando um JDK adequado; `JAVA_HOME` aponta para um JDK Linux válido. Normalmente os executáveis são links sob `~/.sdkman/candidates/{java,maven,gradle}/current/bin` e resolvem para versões instaladas pelo SDKMAN. Se algum comando apontar para `/mnt/c` ou para um `.exe` do Windows, corrija o PATH do Ubuntu antes de continuar. O Gradle Wrapper (`./gradlew`) e Maven Wrapper (`./mvnw`) devem ser preferidos quando existirem em um projeto.
-### 6.4 Confirmar a distribuição WSL2 e limites da validação
-No PowerShell do Windows, `wsl -l -v` deve mostrar a distribuição em versão **2**. A existência de `/workspace`, a confirmação de filesystem ext4 e os bind mounts serão validados **posteriormente**, após executar os guias B e C; não trate sua ausência neste ponto como erro.
-## 7. Dependências das próximas etapas
-**Próxima:** Etapa 03 MSYS2 UCRT64; depois (consulte índice deste repositório) e (consulte índice deste repositório). Docker Desktop: (consulte índice deste repositório); integração Ubuntu: **02.01 — Ubuntu WSL2 e Docker: integração, CLI e volumes**.
-## Checklist
-- [ ] WSL2 instalado e atualizado
-- [ ] Ubuntu inicializado com usuário criado
-- [ ] Ubuntu atualizado via apt
-- [ ] Git, Python, venv e toolchains Linux instalados
-- [ ] SDKMAN disponível em uma nova sessão Bash; `sdk version` e `sdk current` funcionam
-- [ ] Java e javac versão 21 confirmados; JAVA_HOME aponta ao JDK Linux
-- [ ] Maven instalado pelo SDKMAN; `mvn -version` e `sdk current maven` funcionam
-- [ ] Gradle instalado pelo SDKMAN; `gradle --version` e `sdk current gradle` funcionam
-- [ ] `command -v` e `readlink -f` não apontam para ferramentas Windows
-- [ ] Perfil Ubuntu do Terminal aberto corretamente
-- [ ] Validação inicial aprovada; apto para Etapa 03
----
+- [ ] WSL2 instalado e distribuição selecionada inicializada
+- [ ] Usuário Linux correto e distribuição inicia sem erro
+- [ ] Atualizações autorizadas e reinício tratados
+- [ ] Perfil Ubuntu do Terminal validado
 
-
-[Voltar ao índice](01-indice.md)
+Seguir [05 — Workspace Ubuntu](05-workspaces.md), depois [03.1 — Toolchain](03.1-toolchain-ubuntu.md). MSYS2 não é requisito dessas tarefas. Integração Docker depende do Docker Desktop do host, conforme abaixo.
 
 ## Docker Ubuntu
 

@@ -1,5 +1,8 @@
 # 05 — Workspaces, compartilhamentos e PATH
 
+> Revisão pendente no marco M0: há referências históricas à numeração e dependências agregadas nos exemplos abaixo. A arquitetura alvo está no [plano](plano-de-execucao.md): cada ambiente depende apenas dos seus pré-requisitos; procedimentos manuais ainda não são runbooks homologados.
+
+
 ## Windows
 
 ## Ordem de execução corrigida — Guia B
