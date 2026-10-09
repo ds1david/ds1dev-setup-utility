@@ -86,6 +86,7 @@ Ações dependentes de ferramentas devem permanecer bloqueadas até que a respec
 - [Runbooks dinâmicos — adicionar tarefas sem alterar a TUI](runbooks.md)
 - [Proposta YAML v2 — tarefas, checagens, steps e interpretadores](modelo-runbooks-v2.md)
 - [Perfis v2 — distribuições WSL, imagens MSYS2 e versões comuns](perfis-ambientes-versoes-v2.md)
+- [Script runner v2 — contexto, execução, tee, status e falhas](script-runner-v2.md)
 
 
 - [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](tui-windows.md)

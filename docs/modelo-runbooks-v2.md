@@ -2,7 +2,7 @@
 
 Estado: **proposta de arquitetura, ainda não interpretada pelo executor**. Data: 2026-10-09.
 
-[Plano](plano-de-execucao.md) · [Perfis de ambientes e versões](perfis-ambientes-versoes-v2.md) · [Contrato PSD1 atual](runbooks.md) · [Arquitetura](arquitetura-executor.md)
+[Plano](plano-de-execucao.md) · [Perfis de ambientes e versões](perfis-ambientes-versoes-v2.md) · [Script runner v2](script-runner-v2.md) · [Contrato PSD1 atual](runbooks.md) · [Arquitetura](arquitetura-executor.md)
 
 ## Decisão de desenho
 
@@ -79,6 +79,7 @@ O exemplo define a **forma** do contrato. Os scripts Git citados ainda não exis
 | `args`, `env` | Valores literais ou referências tipadas `{input: nome}`; o motor passa argumentos como vetor e variáveis de ambiente, sem interpolar texto YAML dentro de um comando. |
 | `when.anyRequired` | Condição limitada a IDs de checagem; rejeitar IDs desconhecidos ou condições não compreendidas. |
 | `approval`, `timeoutSeconds`, `reboot` | Consentimento de mutação, limite de execução e política de reinício (`block` inicialmente). |
+| `capture`, `retry`, `workingDirectory` | Política de streams/log, repetição segura e diretório do destino, detalhados no [contrato do runner](script-runner-v2.md). |
 
 `Plan` produz: valores resolvidos, origem/versão/hash de downloads quando houver, checagens e evidências, steps necessários, comando/argumentos exibíveis com segredos ocultos, identidade e destino efetivos. O motor calcula um hash desse plano; se as checagens, entradas ou artefatos mudarem antes do Apply, exige novo plano e autorização. Nunca assumir que `exit 0` prova o estado final.
 
@@ -107,6 +108,8 @@ flowchart TD
 ```
 
 Cada step registra ID, início/fim, destino, interpretador, comando exibível, argumentos com valores sensíveis ocultos, exit code, stdout/stderr, erro e resultado da verificação. A TUI mostra o erro da etapa e permite abrir o log; ao sair, oferece exportação dos logs. Falha interrompe os dependentes; rerun recomeça por checagem real, não pela posição registrada anteriormente. Não há rollback genérico.
+
+O [script runner v2](script-runner-v2.md) define o processo coordenador que gera o contexto e as variáveis, prepara o interpretador por destino, transmite stdout/stderr simultaneamente à TUI e ao log e classifica o erro. `file`/`run` de um step são blocos opacos; para atribuir exit code e log a cada comando interno, decompor em steps ou instrumentar checkpoints explícitos. O status de `tee` jamais substitui o status real do script.
 
 ## Destino e interpretador são eixos independentes
 

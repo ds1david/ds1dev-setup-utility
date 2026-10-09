@@ -398,3 +398,16 @@ O [perfil v2 de ambientes e versões](perfis-ambientes-versoes-v2.md) amplia o c
 - [ ] Testar adoção de Ubuntu 24.04 existente, múltiplas distros, imagem importada, raiz MSYS2 customizada, Python 3.10/3.11/3.12 quando disponível e conflitos de paridade Java/Gradle/Maven.
 
 Requisitos exclusivos do host (PowerShell, virtualização e recursos Windows) recebem versões/estados próprios, sem comparação artificial com Linux. Os requests de versão como `3.12` são linhas de escolha; o Plan fixa patch/build exato comum somente quando os provedores o oferecem. O provisionamento de imagens precede a verificação final da compatibilidade das toolchains, pois a distro ainda pode estar ausente na primeira execução.
+
+## Decisão incremental — script runner por interpretador (2026-10-09)
+
+A [especificação de script runner v2](script-runner-v2.md) estabelece um coordenador único com adaptadores por par **destino + shell**. Ele gera contexto/variáveis e diretório temporário privado no destino, executa arquivo/bloco sem concatenar inputs em comandos, drena stdout/stderr continuamente, espelha na TUI e persiste bytes/eventos/resultados no host. O exit code vem do filho real e a tarefa só fica Satisfeita após Test posterior; `Start-Transcript` e `script | tee` não bastam para o protocolo. O contrato classifica falhas de target, interpretador, comando, rede comprovada, saída inválida, timeout, cancelamento, reinício e log.
+
+- [x] Definir contrato de entrada, variáveis geradas/consumidas, outputs tipados, staging, eventos JSONL, resultado atômico, tee e taxonomia de erros.
+- [ ] Implementar coordenador com processo/streams simultâneos, log obrigatório e UI em buffer limitado, preservando exit code e stdout/stderr mesmo sem newline.
+- [ ] Implementar adaptadores Windows pwsh/powershell/cmd/python, WSL bash/sh/python e MSYS2 Bash/sh/Python no ambiente selecionado; conferir intérprete e identidade antes de executar.
+- [ ] Fornecer helper/checkpoints ou steps separados para comandos internos de blocos opacos; testar propagação de falha nativa no PowerShell, Bash e CMD.
+- [ ] Classificar network por sinais verificáveis do provedor/OS, sem retry implícito; persistir causas e logs de interrupção e revalidar na retomada.
+- [ ] Validar ACL/permissões de staging e logs, ocultação de segredos, caminho com acentos, buffers grandes, cancelamento/timeout e exportação em VM Windows limpa e ambiente montado.
+
+Estas entregas detalham M2/M3; a especificação não declara o runner implementado. O `TaskPhases.psm1` atual continua registrando eventos de operações instrumentadas pelo handler, sem streaming confiável de subprocessos.
