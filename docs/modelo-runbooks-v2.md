@@ -2,7 +2,7 @@
 
 Estado: **proposta de arquitetura, ainda não interpretada pelo executor**. Data: 2026-10-09.
 
-[Plano](plano-de-execucao.md) · [Contrato PSD1 atual](runbooks.md) · [Arquitetura](arquitetura-executor.md)
+[Plano](plano-de-execucao.md) · [Perfis de ambientes e versões](perfis-ambientes-versoes-v2.md) · [Contrato PSD1 atual](runbooks.md) · [Arquitetura](arquitetura-executor.md)
 
 ## Decisão de desenho
 
@@ -68,13 +68,14 @@ O exemplo define a **forma** do contrato. Os scripts Git citados ainda não exis
 |---|---|
 | `apiVersion`, `kind`, `metadata.id` | Contrato versionado, tipo fixo e identificador estável, independente do nome da pasta. |
 | `metadata.category`, `title`, `description`, `docs` | Catálogo e detalhes da TUI; `docs` permanece dentro da documentação do pacote. |
-| `spec.target` | Destino padrão da tarefa: Windows, distribuição WSL ou raiz e ambiente MSYS2. Pode ser sobrescrito em um step com justificativa; sem alvo implícito por `shell`. |
+| `spec.target` | Destino único ou `forEach` de um grupo de destinos do perfil. WSL fixa família, distribuição, release, imagem e instância; MSYS2 fixa raiz, arquitetura, imagem base e `MSYSTEM`. Sem alvo implícito por `shell`. |
 | `spec.requires` | Dependências entre runbooks, resolvidas pelo motor com checagem real; o gate global `prerequisites` continua obrigatório mesmo se omitido. |
-| `spec.inputs` | Parâmetros tipados (`string`, `boolean`, `integer`, `enum`, `path`, `version`), padrão e validação; valores resolvidos no Plan. |
+| `spec.inputs` | Parâmetros tipados (`string`, `boolean`, `integer`, `enum`, `path`, `version`), padrão ou referência `fromProfile`, e validação; valores resolvidos no Plan. |
 | `tasks[].checks[]` | Sondas independentes, sem mutação. O resultado estruturado contém `satisfied`, `required` ou `error` e evidência. |
 | `tasks[].apply[]` | Steps ordenados, cada qual com ID, checagens que corrige, condição estruturada, destino, interpretador e consentimento. |
 | `shell` | Chave de um adaptador suportado no destino, não um comando arbitrário para procurar no PATH. |
 | `file` / `run` | Código executado pelo adaptador selecionado. Arquivo e bloco inline usam script temporário no ambiente de destino, com exit code observado. |
+| `variants` | Quando uma tarefa cobre vários destinos, define implementação própria por `windows`, `wsl` e `msys2` para cada checagem/step; falta de variante compatível bloqueia a tarefa. |
 | `args`, `env` | Valores literais ou referências tipadas `{input: nome}`; o motor passa argumentos como vetor e variáveis de ambiente, sem interpolar texto YAML dentro de um comando. |
 | `when.anyRequired` | Condição limitada a IDs de checagem; rejeitar IDs desconhecidos ou condições não compreendidas. |
 | `approval`, `timeoutSeconds`, `reboot` | Consentimento de mutação, limite de execução e política de reinício (`block` inicialmente). |
@@ -140,6 +141,8 @@ O último bloco é apenas exemplo de sintaxe do adaptador; uma checagem v2 real 
 
 MSYS2 oferece **vários ambientes/toolchains**, além de vários interpretadores que podem ser instalados. `UCRT64`, `CLANG64` e `MSYS` não são nomes de shell. A v2 começa com Bash, sh e Python; adaptadores opcionais futuros podem suportar zsh, Ruby, Perl, Node ou outro interpretador **somente** com instalação detectada, semântica de erro, codificação e testes específicos. A lista de nomes admitidos pertence ao pacote do executor; YAML desconhecido falha na validação e não é executado como comando livre.
 
+O [perfil v2](perfis-ambientes-versoes-v2.md) permite selecionar Ubuntu 24.04 ou outra distribuição/release/imagem WSL homologada, bem como a instalação e o ambiente MSYS2. Ferramentas compartilhadas como Python, Java, Maven e Gradle recebem um pedido único e só entram em Apply depois de resolver **a mesma versão efetiva** em todos os destinos selecionados. Os artefatos e hashes continuam específicos de cada sistema. A lista de famílias candidatas não representa suporte automático: cada combinação requer imagem e adaptador homologados.
+
 ## Resolução e distribuição sem depender de Python no Windows limpo
 
 O bootstrap mantém PowerShell 5.1 e seu fluxo atual; não interpreta YAML. Um compilador/validador **empacotado e pré-compilado para Windows**, acionado pelo motor PS7, lerá `runbook.yaml` e produzirá uma representação JSON versionada. O mesmo compilador valida no CI; na TUI, `R` recompila os manifestos locais e atualiza o catálogo sem recompilar a interface. O runtime distribuído traz esse componente: o usuário não instala Rust, Python, PyYAML ou módulo PowerShell para usar runbooks.
@@ -153,6 +156,7 @@ Até esse compilador, os `runbook.psd1`/`runbook.ps1` v1 continuam como executá
 3. Implementar adaptadores Windows, WSL e MSYS2 com resolução da identidade e da instância, arquivos temporários, argumentos seguros, exit code, timeout e streaming de logs.
 4. Implementar protocolo das checagens e do plano imutável; testar parcial, erro, NoOp, reinício e recusa em cada destino.
 5. Migrar um runbook Windows pequeno e homologar em VM limpa e ambiente existente; depois WSL e MSYS2. Não marcar os instaladores históricos como concluídos pelo mero parse do YAML.
+6. Implementar perfil de destinos, catálogo de imagens, lock de versões comum e matriz de compatibilidade antes de aplicar toolchains em vários ambientes.
 
 ## Referências de desenho
 

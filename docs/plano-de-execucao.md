@@ -383,3 +383,18 @@ A [especificação de runbooks v2](modelo-runbooks-v2.md) adapta a ideia do usu�
 - [ ] Migrar um runbook Windows vertical completo e homologá-lo; então migrar exemplos WSL/MSYS2 e as demais páginas da wiki sem IDs duplicados.
 
 Esta decisão acrescenta entregas aos marcos M2–M4 e à homologação M11; não transforma os dez handlers históricos em instaladores nem muda o bootstrap PS5.1. MSYS2 possui vários **ambientes** além de interpretadores instaláveis; o manifesto precisa identificar ambos.
+
+## Decisão incremental — perfis, imagens e paridade de versões (2026-10-09)
+
+O [perfil v2 de ambientes e versões](perfis-ambientes-versoes-v2.md) amplia o contrato: o usuário seleciona família, distribuição, release, imagem e instância WSL (por exemplo Ubuntu 24.04), ou instalação, release base e MSYSTEM no MSYS2. O catálogo pode considerar Debian/Ubuntu, Red Hat/Fedora, Arch, SUSE, Alpine e NixOS, mas **somente imagens e adaptadores homologados** são executáveis. Imagens externas exigem origem, hash, arquitetura, licença e procedimento de usuário/primeira inicialização. O bootstrap PS5.1 permanece sem dependência dessas imagens.
+
+- [x] Especificar perfil YAML separado do runbook, seletores por ambiente, instância existente e imagem desejada, e expansão de tarefas por destino.
+- [x] Definir `alignment.mode: exact`: Python, Java (incluindo fornecedor), Maven, Gradle e outras ferramentas compartilhadas devem resolver a mesma versão efetiva em cada destino selecionado, ou o grupo fica bloqueado antes de Apply.
+- [ ] Construir catálogo versionado de imagens WSL e MSYS2 e matriz `supported/experimental/planned/unavailable` por release, arquitetura, família e provedor; validar imagens no Windows e não prometer suporte pela mera existência de TAR.
+- [ ] Migrar o checklist para exibir requisitos host específicos e a imagem/instância WSL selecionada; oferecer escolha e consentimento na instalação da distro após o gate host, com checagem de SO/usuário/WSL2 posterior.
+- [ ] Implementar adaptadores Debian/Ubuntu, Fedora/RHEL, Arch, SUSE, Alpine e NixOS separadamente; homologar cada distribuição/release antes de habilitar Apply. MSYS2 inicia em UCRT64 x64 e só expande ambientes mediante teste.
+- [ ] Resolver a interseção de versões dos destinos **antes de instalar qualquer toolchain**, bloquear incompatibilidade e persistir lock com versão, fornecedor, imagem, provedor, hash e evidência por instância.
+- [ ] Implementar variantes por destino para checagens e steps; verificar que o shell da checagem existe antes da ferramenta a instalar, sem reutilizar binários Windows em WSL/MSYS2.
+- [ ] Testar adoção de Ubuntu 24.04 existente, múltiplas distros, imagem importada, raiz MSYS2 customizada, Python 3.10/3.11/3.12 quando disponível e conflitos de paridade Java/Gradle/Maven.
+
+Requisitos exclusivos do host (PowerShell, virtualização e recursos Windows) recebem versões/estados próprios, sem comparação artificial com Linux. Os requests de versão como `3.12` são linhas de escolha; o Plan fixa patch/build exato comum somente quando os provedores o oferecem. O provisionamento de imagens precede a verificação final da compatibilidade das toolchains, pois a distro ainda pode estar ausente na primeira execução.
