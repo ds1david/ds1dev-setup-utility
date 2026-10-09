@@ -418,7 +418,7 @@ O [guia prático de testes](guia-de-testes.md) separa contrato automatizado, son
 
 - [x] Corrigir o teste do handoff para que a falha intencional do processo filho não deixe `$LASTEXITCODE=1` no passo do CI após as asserções passarem.
 - [x] Publicar instruções e critérios verificáveis para Windows PowerShell 5.1, PS7, UAC, preflight, TUI, recusa, logs e reinício pendente.
-- [ ] Obter workflow verde para a revisão publicada e anexar sua execução ao registro de homologação.
+- [x] Obter workflow verde para a revisão publicada: [execução 37955912091](https://github.com/ds1david/ds1dev-setup-utility/actions/runs/37955912091), commit `2de6efb6b7c02a19d1620beb6e0cd5faa650f2e7` (Windows PS5.1/PS7 e Ubuntu; testes de contrato, não homologação UAC/MSI).
 - [ ] Executar e registrar cenário parcial em Windows 11 real/VM, desde PS5.1 não elevado, sem assumir que os mocks testaram UAC.
 - [ ] Executar e registrar cenário limpo em VM descartável, com PS5.1 e sem WinGet/PS7/WSL2 previamente configurados.
 - [ ] Após implementação de YAML v2 e script runner, criar suíte de schema/adaptadores e provas reais por destino; exemplos da especificação não contam como execução.
