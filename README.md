@@ -30,4 +30,23 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 
 O ponto de entrada planejado é `bootstrap.ps1`. **Não use `irm ... | iex` para baixar e executar código administrativo não revisado.** Prefira baixar o arquivo de uma release fixada, inspecionar sua assinatura/hash e depois executá-lo num PowerShell elevado.
 
-A interface inicial e os scripts ainda estão sendo implementados. Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e limitações.
+## Protótipo disponível (somente diagnóstico)
+
+- `bootstrap.ps1`: exige administrador Windows, reconhece PowerShell 5.1/7, oferece instalação de PowerShell 7 e inicia o protótipo de TUI.
+- `src/ds1-setup.ps1`: lista tarefas, mostra bloqueios de dependências, permite `-Plan` e `-Validate`, registra transcrição da sessão e observações em `%ProgramData%\\DS1DevSetup`.
+- `config/catalog.psd1`: grafo inicial de tarefas. **Nenhuma tarefa está marcada como Implemented** e `-Apply` é bloqueado até implementação e testes. A seleção de versão já faz parte do contrato, mas os instaladores versionados ainda não existem.
+
+Para uso local, após revisar o conteúdo:
+
+```powershell
+# Abrir PowerShell como administrador
+.\\bootstrap.ps1
+```
+
+O modo `irm ... | iex` é tecnicamente possível apontando para o bootstrap remoto, mas **não é a opção recomendada para executar código elevado de uma branch mutável**. Para produção, usar uma release com hash ou assinatura verificável.
+
+## Limitações atuais
+
+O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou logging multiplexado de subprocessos. O log atual é a transcrição PowerShell e não substitui captura auditável de stdout/stderr de futuros processos. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
+
+Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e limitações.
