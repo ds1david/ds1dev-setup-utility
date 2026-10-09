@@ -22,6 +22,40 @@ function ConvertTo-Ds1Literal([string]$Value) {
     return "'" + $Value.Replace("'", "''") + "'"
 }
 
+
+function ConvertFrom-Ds1WebContent($Content) {
+    if ($Content -is [byte[]]) {
+        return ([Text.Encoding]::UTF8.GetString($Content)).TrimStart([char]0xFEFF)
+    }
+    if ($Content -is [string]) { return $Content.TrimStart([char]0xFEFF) }
+    throw 'Resposta HTTP do bootstrap nao contem texto ou bytes UTF-8.'
+}
+
+function New-Ds1ElevationCommand([string]$Body, [string]$ErrorLog) {
+    # This wrapper runs ONLY in the child process. Its exit must not close the caller.
+    $template = @'
+$ErrorActionPreference = 'Stop'
+try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    __BODY__
+} catch {
+    $failure = $_
+    $details = ($failure | Format-List * -Force | Out-String) + "`r`nScriptStackTrace:`r`n" + $failure.ScriptStackTrace
+    try {
+        Set-Content -LiteralPath __ERROR_LOG__ -Value $details -Encoding UTF8 -ErrorAction Stop
+    } catch {
+        [Console]::Error.WriteLine('Nao foi possivel gravar o diagnostico: ' + $_.Exception.Message)
+    }
+    [Console]::Error.WriteLine($details)
+    [Console]::Error.WriteLine('Diagnostico da elevacao: ' + __ERROR_LOG__)
+    # Write-Error with ErrorActionPreference=Stop would abort the catch before this pause.
+    try { $null = Read-Host 'Falha no bootstrap. Pressione Enter para fechar e voltar ao terminal original' } catch { }
+    exit 1
+}
+'@
+    return $template.Replace('__BODY__', $Body).Replace('__ERROR_LOG__', (ConvertTo-Ds1Literal $ErrorLog))
+}
+
 function Get-Ds1NativeArchitecture {
     $arch = $env:PROCESSOR_ARCHITEW6432
     if (-not $arch) { $arch = $env:PROCESSOR_ARCHITECTURE }
@@ -156,9 +190,14 @@ function Invoke-Ds1Bootstrap([string]$LocalRoot, [string]$LocalScript) {
             $commit = $SourceCommit
             if (-not $commit) { $commit = Resolve-Ds1SourceCommit }
             $url = "https://raw.githubusercontent.com/ds1david/ds1dev-setup-utility/$commit/bootstrap.ps1"
-            $command = '$code = (Invoke-WebRequest -UseBasicParsing -Uri ' + (ConvertTo-Ds1Literal $url) + ').Content; & ([scriptblock]::Create($code)) -InitiatingSid ' + (ConvertTo-Ds1Literal $sid) + ' -SourceCommit ' + (ConvertTo-Ds1Literal $commit)
+            # Include the decoder in the child before the downloaded bootstrap exists.
+            $decoder = 'function ConvertFrom-Ds1WebContent { ' + ${function:ConvertFrom-Ds1WebContent}.ToString() + ' }; '
+            $command = $decoder + '$response = Invoke-WebRequest -UseBasicParsing -Uri ' + (ConvertTo-Ds1Literal $url) + '; $code = ConvertFrom-Ds1WebContent $response.Content; & ([scriptblock]::Create($code)) -InitiatingSid ' + (ConvertTo-Ds1Literal $sid) + ' -SourceCommit ' + (ConvertTo-Ds1Literal $commit)
         }
-        $command = "`$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; try { $command } catch { Write-Error `$_; Read-Host 'Pressione Enter para fechar'; exit 1 }"
+        $handoff = New-Ds1Stage
+        $errorLog = Join-Path $handoff 'elevation-error.log'
+        Write-Host "Diagnostico em caso de falha na sessao elevada: $errorLog"
+        $command = New-Ds1ElevationCommand -Body $command -ErrorLog $errorLog
         $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
         $shell = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
         try {
@@ -166,7 +205,12 @@ function Invoke-Ds1Bootstrap([string]$LocalRoot, [string]$LocalScript) {
         } catch {
             throw "Elevacao nao concluida ou cancelada no UAC. Nenhuma instalacao iniciada por esta sessao. $($_.Exception.Message)"
         }
-        if ($child.ExitCode -ne 0) { throw "Bootstrap elevado terminou com codigo $($child.ExitCode)." }
+        if ($child.ExitCode -ne 0) {
+            if (Test-Path -LiteralPath $errorLog -PathType Leaf) {
+                Write-Host (Get-Content -LiteralPath $errorLog -Raw)
+            }
+            throw "Bootstrap elevado terminou com codigo $($child.ExitCode). Diagnostico: $errorLog"
+        }
         return
     }
     $architecture = Get-Ds1NativeArchitecture

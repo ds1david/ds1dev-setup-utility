@@ -198,3 +198,9 @@ Quando for usar Windows containers, arquivos e binds específicos podem ficar em
 - [ ] Modo Windows containers habilitado apenas quando necessário, com requisitos e privilégios conhecidos
 - [ ] Wrapper de Windows verifica a engine esperada
 - [ ] Política de troca exclusiva compreendida
+
+## Diagnóstico de falha após UAC
+
+Se o processo elevado falhar, o bootstrap deve mostrar a exceção original na janela elevada, aguardar Enter e reproduzir o diagnóstico na sessão original. O caminho `ds1dev-setup-<id>/elevation-error.log` é mostrado antes da elevação. Esse log cobre inclusive falhas anteriores ao início da transcrição administrativa.
+
+O primeiro teste real em PowerShell 5.1 retornou apenas código 1. Foi identificado e corrigido um erro no tratamento da exceção: `Write-Error` com preferência `Stop` interrompia o próprio catch antes da pausa. Também foi adicionada conversão explícita de bytes UTF-8 para texto no download remoto, para não passar conteúdo binário a `ScriptBlock.Create`. A causa inicial desse teste ainda depende do novo diagnóstico; não confundir a correção de observabilidade com homologação completa do bootstrap.
