@@ -26,6 +26,7 @@ Import-Module (Join-Path $PSScriptRoot 'TaskPhases.psm1') -Force
 $RunbookRoot = Join-Path $RepoRoot 'runbooks'
 $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }
 $StatusCache = @{}
+$script:GateCache = @{ At = [datetime]::MinValue; Ready = $false }
 $LogHome = Join-Path $env:ProgramData 'DS1DevSetup\logs'
 $StateHome = Join-Path $env:ProgramData 'DS1DevSetup\state'
 New-Item -ItemType Directory -Force -Path $LogHome,$StateHome | Out-Null
@@ -37,6 +38,12 @@ Start-Transcript -Path $log -IncludeInvocationHeader | Out-Null
 function Test-Step([string]$id) {
   $step = Get-Step $id
   return (Invoke-RunbookHandler -Runbook $step -Mode Test)
+}
+function Test-UiGate {
+  if (((Get-Date) - $script:GateCache.At).TotalSeconds -lt 15) { return $script:GateCache.Ready }
+  $probe = Test-Step 'prerequisites'
+  $script:GateCache = @{ At = Get-Date; Ready = [bool]$probe.Detected }
+  return $script:GateCache.Ready
 }
 function Get-Step([string]$id) {
   $match = @($Catalog.Tasks | Where-Object { $_.Id -eq $id })
@@ -60,8 +67,16 @@ function Get-Status([string]$id) {
   if ($cached -and ((Get-Date) - $cached.At).TotalSeconds -lt 15) { return $cached.Value }
   $step = Get-Step $id
   $state = try {
-    Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
-    $phase = Get-Ds1CheckState (Test-Step $id)
+    if ($id -eq 'prerequisites') {
+      $prerequisites = Test-Step $id
+      $script:GateCache = @{ At = Get-Date; Ready = [bool]$prerequisites.Detected }
+    } elseif (-not (Test-UiGate)) {
+      throw 'Pré-requisitos Windows pendentes; execução bloqueada.'
+    } elseif ($step.Implemented) {
+      # Keep the full dependency validation for implemented runbooks.
+      Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
+    }
+    $phase = Get-Ds1CheckState $(if ($id -eq 'prerequisites') { $prerequisites } else { Test-Step $id })
     if (-not $step.Implemented) { "$phase (planejado)" }
     else { $phase }
   } catch { "Blocked ($($_.Exception.Message))" }
@@ -136,6 +151,7 @@ try {
       return $answer
     }
     $null = Invoke-Ds1Preflight -Catalog $Catalog.Tasks -Context @{RunId=$runId;LogPath=$log;CommandLogPath=$commandLog;StateHome=$StateHome} -Consent $consent
+    $script:GateCache = @{ At = Get-Date; Ready = $true }
   }
   if ($List) {
     foreach ($s in $Catalog.Tasks) { Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id)) }

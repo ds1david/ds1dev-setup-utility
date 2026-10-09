@@ -422,3 +422,13 @@ O [guia prático de testes](guia-de-testes.md) separa contrato automatizado, son
 - [ ] Executar e registrar cenário parcial em Windows 11 real/VM, desde PS5.1 não elevado, sem assumir que os mocks testaram UAC.
 - [ ] Executar e registrar cenário limpo em VM descartável, com PS5.1 e sem WinGet/PS7/WSL2 previamente configurados.
 - [ ] Após implementação de YAML v2 e script runner, criar suíte de schema/adaptadores e provas reais por destino; exemplos da especificação não contam como execução.
+
+### Registro do teste PS5.1 → UAC → PS7 (2026-10-09)
+
+O teste de campo em Windows parcialmente configurado reutilizou PowerShell 7.6.6 MSIX e abriu a janela administrativa. Após aceitar o snapshot, apareceu apenas o cabeçalho `DS1 Dev Setup Utility`; a sessão foi abortada manualmente. O retorno `-1073741510` indica interrupção do processo, não uma exceção diagnosticada pelo bootstrap. O arquivo `elevation-error.log` só é criado quando ocorre uma exceção capturada no handoff.
+
+- [x] Mostrar na sessão original que a janela UAC/administrativa continua a execução e que ela aguarda o resultado; classificar interrupção manual separadamente.
+- [x] Mostrar progresso antes e durante o diagnóstico de host, virtualização e recursos WSL2 e enquanto cada item da TUI obtém status.
+- [x] Evitar que o desenho inicial da TUI execute a mesma sondagem completa dos pré-requisitos uma vez por tarefa planejada; manter rechecagem no momento da execução real.
+- [ ] Confirmar em Windows 11 do usuário se a espera ocorria no preflight, em uma consulta DISM/CIM ou no desenho do painel; coletar o transcript `run-*.log` da sessão e repetir com a revisão corrigida.
+- [ ] Se uma consulta do Windows permanecer lenta ou travar, impor limite de tempo e mostrar causa específica sem liberar o gate.

@@ -228,6 +228,7 @@ function Invoke-Ds1Bootstrap([string]$LocalRoot, [string]$LocalScript) {
         $handoff = New-Ds1Stage
         $errorLog = Join-Path $handoff 'elevation-error.log'
         Write-Host "Diagnostico em caso de falha na sessao elevada: $errorLog"
+        Write-Host 'Conclua a execucao na janela administrativa; esta sessao aguardara o resultado.'
         $command = New-Ds1ElevationCommand -Body $command -ErrorLog $errorLog
         $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
         $shell = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -237,6 +238,9 @@ function Invoke-Ds1Bootstrap([string]$LocalRoot, [string]$LocalScript) {
             throw "Elevacao nao concluida ou cancelada no UAC. Nenhuma instalacao iniciada por esta sessao. $($_.Exception.Message)"
         }
         if ($child.ExitCode -ne 0) {
+            if ($child.ExitCode -eq -1073741510) {
+                throw 'Sessao administrativa interrompida pelo usuario (Ctrl+C ou janela fechada). Nenhuma conclusao foi registrada; consulte os logs da sessao elevada antes de tentar novamente.'
+            }
             if (Test-Path -LiteralPath $errorLog -PathType Leaf) {
                 Write-Host (Get-Content -LiteralPath $errorLog -Raw)
             }
@@ -275,6 +279,7 @@ function Invoke-Ds1Bootstrap([string]$LocalRoot, [string]$LocalScript) {
             $entry = Join-Path $stage "ds1dev-setup-utility-$commit\src\ds1-setup.ps1"
             if (-not (Test-Path -LiteralPath $entry -PathType Leaf)) { throw 'Pacote incompleto: executor ausente.' }
         }
+        Write-Host 'Iniciando diagnostico de pre-requisitos no PowerShell 7. Aguarde os resultados na janela administrativa.'
         & $pwsh.Path -NoLogo -NoProfile -File $entry
         if ($LASTEXITCODE -ne 0) { throw "Executor terminou com codigo $LASTEXITCODE." }
     } finally {

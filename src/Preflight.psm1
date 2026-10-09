@@ -11,6 +11,7 @@ function Invoke-Ds1Preflight {
     $preflight = $matches[0]
     $diagnosticContext = @{} + $Context
     $diagnosticContext.ShowDetails = $true
+    Write-Host 'Verificando pre-requisitos Windows: sistema, virtualizacao e recursos WSL2...'
     $test = Invoke-RunbookHandler -Runbook $preflight -Mode Test -Context $diagnosticContext
     if ($test.Detected) { Write-Host 'Pré-requisitos atendidos. Runbooks liberados.'; return $true }
     $plan = Invoke-RunbookHandler -Runbook $preflight -Mode Plan -Context $Context

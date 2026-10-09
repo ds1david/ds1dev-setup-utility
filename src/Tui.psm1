@@ -32,19 +32,21 @@ function Write-Ds1Frame([array]$Tasks,[array]$Categories,[int]$CategoryIndex,[in
         Put 2 (6+$i) ($(if($i -eq $CategoryIndex){'> '}else{'  '})+$Categories[$i]) $(if($i -eq $CategoryIndex -and $CategoriesFocused){'Cyan'}else{'Yellow'})
     }
     Box $rightX 3 $rightWidth ($footerY-3) 'ITENS DE CONFIGURAÇÃO'
-    $visible=[Math]::Max(1,$footerY-6);$start=[Math]::Max(0,$Selected-$visible+1)
-    if($Selected -lt $visible){$start=0}
-    for($i=$start;$i -lt [Math]::Min($Tasks.Count,$start+$visible);$i++){
-        $task=$Tasks[$i];$state=& $Status $task.Id
-        $requested=if($Versions.ContainsKey($task.Id)){" v$($Versions[$task.Id])"}else{''}
-        $line=('{0}{1,-27} {2}{3}' -f $(if($i -eq $Selected){'> '}else{'  '}),$task.Title,$state,$requested)
-        Put ($rightX+2) (5+$i-$start) $line $(if($i -eq $Selected -and -not $CategoriesFocused){'Cyan'}elseif($state -like 'Blocked*'){'Yellow'}else{'Gray'})
-    }
-    if($Tasks.Count -eq 0){Put ($rightX+2) 5 'Nenhum runbook nesta categoria/busca.' 'Yellow'}
     Box 0 $footerY $width 6 'COMANDOS DE NAVEGAÇÃO'
     Put 2 ($footerY+1) '[Tab] trocar painel    [Up/Down] navegar    [Enter] verificar'
     Put 2 ($footerY+2) '[/] buscar            [E] escolher versão   [P] planejar'
     Put 2 ($footerY+3) '[V] verificar  [A] aplicar  [L] logs  [R] recarregar  [Q] sair' 'Yellow'
+    $visible=[Math]::Max(1,$footerY-6);$start=[Math]::Max(0,$Selected-$visible+1)
+    if($Selected -lt $visible){$start=0}
+    for($i=$start;$i -lt [Math]::Min($Tasks.Count,$start+$visible);$i++){
+        $task=$Tasks[$i]
+        Put ($rightX+2) (5+$i-$start) ('  '+$task.Title+' - verificando...') 'Yellow'
+        $state=& $Status $task.Id
+        $requested=if($Versions.ContainsKey($task.Id)){" v$($Versions[$task.Id])"}else{''}
+        $line=('{0}{1,-27} {2}{3}' -f $(if($i -eq $Selected){'> '}else{'  '}),$task.Title,$state,$requested)
+        Put ($rightX+2) (5+$i-$start) ($line.PadRight([Math]::Max($line.Length,$rightWidth-4))) $(if($i -eq $Selected -and -not $CategoriesFocused){'Cyan'}elseif($state -like 'Blocked*'){'Yellow'}else{'Gray'})
+    }
+    if($Tasks.Count -eq 0){Put ($rightX+2) 5 'Nenhum runbook nesta categoria/busca.' 'Yellow'}
 }
 function Show-Ds1Modal([string]$Title,[string[]]$Lines,[string]$Prompt='Pressione Enter para voltar') {
     Write-Host ''

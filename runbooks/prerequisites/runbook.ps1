@@ -27,7 +27,8 @@ function Get-Checks {
     $checks += New-Check 'administrator' 'Terminal administrador' $admin $(if($admin){'Token elevado.'}else{'Reabra pelo bootstrap e autorize o UAC.'})
     $psVersion = $PSVersionTable.PSVersion
     $checks += New-Check 'powershell' 'PowerShell 7.4 ou superior' ($psVersion.Major -eq 7 -and $psVersion -ge [version]'7.4') "Versão atual: $psVersion"
-    $os = try { Get-CimInstance Win32_OperatingSystem -ErrorAction Stop } catch { $null }
+    if ($Context.ShowDetails) { Write-Host '  Consultando a versao do Windows...' }
+    $os = try { Get-CimInstance Win32_OperatingSystem -OperationTimeoutSec 15 -ErrorAction Stop } catch { $null }
     $version = $null
     $validWindows = ($null -ne $os -and [version]::TryParse([string]$os.Version, [ref]$version) -and
         $version.Major -eq 10 -and $version.Build -ge 22000)
@@ -37,8 +38,9 @@ function Get-Checks {
     $checks += New-Check 'architecture' 'Arquitetura x64' ($arch -eq 'AMD64') "Arquitetura observada: $arch"
     $hypervisor = $null
     $firmware = $null
-    try { $hypervisor = [bool](Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).HypervisorPresent } catch { }
-    try { $firmware = [bool](Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1).VirtualizationFirmwareEnabled } catch { }
+    if ($Context.ShowDetails) { Write-Host '  Consultando a virtualizacao do host...' }
+    try { $hypervisor = [bool](Get-CimInstance Win32_ComputerSystem -OperationTimeoutSec 15 -ErrorAction Stop).HypervisorPresent } catch { }
+    try { $firmware = [bool](Get-CimInstance Win32_Processor -OperationTimeoutSec 15 -ErrorAction Stop | Select-Object -First 1).VirtualizationFirmwareEnabled } catch { }
     $virtualization = ($hypervisor -eq $true -or $firmware -eq $true)
     $checks += New-Check 'virtualization' 'Virtualização para WSL2' $virtualization $(
         if($virtualization){'Hipervisor ativo ou virtualização habilitada no firmware.'}
@@ -46,6 +48,7 @@ function Get-Checks {
     foreach ($item in @(
         @{Id='wsl-feature';Name='Microsoft-Windows-Subsystem-Linux';Title='Recurso WSL'},
         @{Id='vm-feature';Name='VirtualMachinePlatform';Title='Plataforma de Máquina Virtual'})) {
+        if ($Context.ShowDetails) { Write-Host "  Consultando recurso Windows: $($item.Name)..." }
         $feature = try { Get-WindowsOptionalFeature -Online -FeatureName $item.Name -ErrorAction Stop } catch { $null }
         $state = if ($feature) { [string]$feature.State } else { 'Inacessível' }
         $repair = if ($state -eq 'Disabled') { "Enable-WindowsOptionalFeature:$($item.Name)" } else { '' }

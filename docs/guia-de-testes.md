@@ -56,6 +56,15 @@ $script = irm $url
 
 Observe: prompt de elevação, UAC, mesma identidade Windows, descoberta de PS7, consentimento separado para instalar PS7 caso falte, e consentimento para baixar snapshot se a entrada foi remota. Em máquina parcialmente pronta, PS7 compatível deve ser reutilizado; não deve haver reinstalação. Se houver falha elevada, copie o texto exibido e o caminho de `elevation-error.log`; `bootstrap.log` fica no staging informado pelo bootstrap. Um código 1 sem causa exibida reproduz o defeito anterior e deve ser registrado.
 
+O UAC abre uma **nova janela administrativa**: o terminal PS5.1 inicial informa que aguarda o resultado dessa janela. O retorno `-1073741510` após Ctrl+C ou fechar a janela significa interrupção manual. Nesse caso pode não existir `elevation-error.log`, pois nenhuma exceção foi capturada. Se o painel parar após o cabeçalho, anote a última linha de progresso visível e, em outro terminal, consulte sem alterar o sistema:
+
+```powershell
+Get-ChildItem "$env:ProgramData\DS1DevSetup\logs\run-*.log" | Sort-Object LastWriteTime -Descending | Select-Object -First 1 FullName,LastWriteTime
+Get-Content (Get-ChildItem "$env:ProgramData\DS1DevSetup\logs\run-*.log" | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName -Tail 80
+```
+
+Guarde o transcript e o `bootstrap.log` do diretório de staging exibido pela janela elevada. O progresso do preflight aponta qual consulta Windows está em andamento; nenhuma mensagem de progresso por longo período ainda requer diagnóstico e não significa que os requisitos foram satisfeitos.
+
 ## 3. Diagnóstico do preflight e da TUI
 
 Em **PS7 elevado**, na raiz do mesmo checkout, rode primeiro os modos de diagnóstico:
