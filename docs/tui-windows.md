@@ -10,7 +10,7 @@ Adotar uma interface de terminal semelhante ao Linutil: fundo escuro, painéis d
 
 Referência inspecionada: [Linutil](https://github.com/ChrisTitusTech/linutil/tree/0b0f7449e79275a7ad5cd1c0dee48c6d71f1f7f1), incluindo preview oficial, `tui/src/theme.rs`, `hint.rs` e `running_command.rs`. O código de referência usa terminal virtual para comandos e permite salvar seu log; DS1 exige gravação automática contínua e buffers de tela limitados. Não transpor o executor baseado em `sh -c` para Windows.
 
-A imagem enviada pelo usuário foi inspecionada nesta sessão: captura do Linutil em Ubuntu-26.04 no Windows Terminal. Ela mostra busca no topo, coluna esquerda com marca/categorias e dados do sistema, lista central/direita com indicadores `[D]` e `[*]`, confirmação sobreposta e rodapé de atalhos. Os mockups refletem essa composição, com marca própria DS1 e estados de instalação Windows.
+As três capturas enviadas pelo usuário foram inspecionadas: Linutil em Ubuntu-26.04 no Windows Terminal, inclusive catálogo multiseleção e comando em execução. Elas mostram busca no topo, marca acima de um box **pequeno** de categorias à esquerda, box **maior** de itens à direita com indicadores `[D]` e `[*]`, confirmação sobreposta e um box inferior de comandos de navegação. Durante uma instalação, a saída ocupa o box da direita e o rodapé troca os atalhos conforme o contexto. Os mockups refletem essa composição, com marca própria DS1 e estados de instalação Windows.
 
 ## Duas etapas com a mesma linguagem visual
 
@@ -20,10 +20,10 @@ A tela inicial deve existir **antes** de PowerShell 7, WinGet e Windows Terminal
 
 - Cabeçalho: DS1 Dev Setup, fase “Inicialização”, Windows/arquitetura, shell atual, usuário e estado de elevação.
 - Busca na faixa superior: desativada durante as poucas etapas fixas do bootstrap; permanece visível para manter a composição.
-- Esquerda: marca DS1, etapas fixas de inicialização — diagnóstico, elevação, PowerShell 7, pacote e início — e dados do sistema.
-- Direita: requisitos e estados observados. Valores desconhecidos aparecem como “Verificando” ou “Não verificado”, nunca como sucesso.
+- Esquerda: marca DS1 acima de um box compacto de categorias/etapas. O espaço restante não precisa ser preenchido; dados do host entram no cabeçalho ou em detalhes.
+- Direita: box principal maior com requisitos e estados observados, na mesma posição em que o console exibirá os comandos ao executar. Valores desconhecidos aparecem como “Verificando” ou “Não verificado”, nunca como sucesso.
 - Janela sobreposta: consentimento contextual para UAC, instalação do MSI ou pacote DS1, sempre com efeitos e opção de cancelar.
-- Rodapé: atalhos contextuais. Log completo por tecla L e indicação persistente de seu caminho. Uma falha conserva a mensagem em janela sobreposta. A opção inicial de qualquer confirmação de instalação é “Cancelar”.
+- Rodapé: box de comandos de navegação, com duas colunas e teclas dependentes do contexto. Log completo por tecla L e indicação persistente de seu caminho. Uma falha conserva a mensagem em janela sobreposta. A opção inicial de qualquer confirmação de instalação é “Cancelar”.
 
 ![Bootstrap conceitual](assets/tui-bootstrap.svg)
 
@@ -41,11 +41,11 @@ Depois de PS7 compatível validado e pacote verificado, abrir a interface comple
 |---|---|
 | Cabeçalho | Versão DS1/revisão, usuário, administrador, ambiente e instância selecionados |
 | Busca no topo | Filtro incremental por título, ID e ferramenta; desliga atalhos globais enquanto o campo recebe texto |
-| Navegação esquerda, aproximadamente 23% | Marca DS1, categorias do catálogo e quadro de sistema/instância |
-| Lista principal, aproximadamente 77% | Diretórios e runbooks, seleção em lote, estado observado, versão e dependência bloqueante |
+| Box de categorias à esquerda, aproximadamente 23% da largura | Marca acima; categorias dentro de um box compacto cuja altura acompanha os itens, deixando espaço livre abaixo |
+| Box principal à direita, aproximadamente 77% da largura | Diretórios e runbooks, seleção em lote, estado observado, versão e dependência bloqueante; ocupa a maior parte da altura |
 | Janelas sobrepostas | Detalhes da tarefa, seleção de versão, plano, confirmação e diagnóstico de falha; nenhuma instalação por Enter na lista |
-| Rodapé | Atalhos pertinentes ao foco, quantidade selecionada e avisos relevantes |
-| Console de execução | Substitui a lista ao aplicar; acompanha saída contínua, rolagem e caminho do log automático |
+| Box inferior em toda a largura | Lista explícita de comandos pertinentes ao foco, em colunas, como nas capturas de referência |
+| Console de execução | Ocupa o mesmo box principal da lista, com saída contínua, rolagem e caminho do log automático; o box inferior passa a mostrar atalhos de execução |
 
 Mostrar ambiente como Windows / Ubuntu WSL2 / MSYS2, e a instância específica (nome da distro ou raiz MSYS2). Não confundir “pacote instalado” com “configuração validada”. Uma tarefa bloqueada permanece visível, com motivo e opção de incluir o pré-requisito no plano; não instalar dependências silenciosamente.
 
@@ -83,7 +83,9 @@ No bootstrap, só disponibilizar as teclas pertinentes às suas etapas fixas. Mo
 
 Versões são escolhidas por ferramenta, com provedor, arquitetura e compatibilidade; a mesma tela pode selecionar Java, Maven, Gradle e Python com versões diferentes. Confirmar o plano mostra ações efetivas e itens que já estão conformes. “Latest” é resolvido e fixado antes da confirmação.
 
-Ao aplicar, o console de saída ocupa a área principal, mantendo resumo do lote e progresso. Exibir comando com argumentos sensíveis ocultos, ambiente, stdout/stderr, resultado e caminho do log. Permitir PageUp/PageDown, voltar ao acompanhamento ao vivo e expandir detalhes. O fim da tarefa nunca fecha a tela automaticamente; falhas preservam contexto e motivo.
+Ao aplicar, o console de saída ocupa o box principal à direita e substitui a lista de itens, mantendo resumo do lote e progresso. Exibir comando com argumentos sensíveis ocultos, ambiente, stdout/stderr, resultado e caminho do log. Permitir PageUp/PageDown, voltar ao acompanhamento ao vivo e expandir detalhes. O fim da tarefa nunca fecha a tela automaticamente; falhas preservam contexto e motivo.
+
+![Console durante a execução](assets/tui-execucao.svg)
 
 Ctrl+C solicita cancelamento pelo motor. Para operação que não pode ser interrompida com segurança, mostrar “Cancelamento pendente” e não iniciar a próxima tarefa. Não afirmar rollback universal de instaladores. Encerrar processo à força é uma ação separada e explícita.
 
