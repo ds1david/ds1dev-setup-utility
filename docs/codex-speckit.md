@@ -13,7 +13,7 @@ git status --short
 # Após revisão/merge da PR de adoção, criar branch própria para inicialização oficial.
 git switch -c chore/spec-kit-official-init
 uv tool install specify-cli
-specify --version
+specify version
 specify init --here --force --integration codex --script ps --non-interactive
 git status --short
 git diff -- .specify .agents AGENTS.md
