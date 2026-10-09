@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<rect width="1280" height="800" fill="#101218"/>
+<style>text{font-family:Consolas,monospace;font-size:17px;fill:#d7dbe1}.muted{fill:#8f99a7}.cyan{fill:#4cc1da}.gold{fill:#e1bd6d}.blue{fill:#5796f5}.title{font-size:24px;font-weight:bold}.small{font-size:15px}</style>
+<text x="32" y="44" class="title">DS1 DEV SETUP</text>
+<text x="306" y="44" class="cyan">Comando em execução</text>
+<text x="976" y="44" class="gold small">MOCKUP CONCEITUAL</text>
+<text x="32" y="77" class="muted small">Windows 11 • PowerShell 7 • Administrador</text>
+<rect x="292" y="102" width="960" height="62" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="304" y="91" width="86" height="22" fill="#101218"/>
+<text x="312" y="108" class="gold">BUSCA</text>
+<text x="313" y="141" class="muted">Digite para filtrar (/)</text>
+<text x="94" y="218" class="title cyan">DS1</text>
+<text x="43" y="249" class="gold small">Windows + WSL2 + MSYS2</text>
+<rect x="20" y="277" width="252" height="220" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="32" y="266" width="110" height="22" fill="#101218"/>
+<text x="40" y="283" class="gold">CATEGORIAS</text>
+<text x="37" y="318" class="cyan">&gt; Preparação</text>
+<text x="37" y="352" class="gold">  Toolchains</text>
+<text x="37" y="386" class="gold">  Workspaces</text>
+<text x="37" y="420" class="gold">  Shells</text>
+<text x="37" y="454" class="gold">  IDEs</text>
+<rect x="292" y="195" width="960" height="434" fill="none" stroke="#5796f5" stroke-width="2"/>
+<rect x="304" y="184" width="231" height="22" fill="#101218"/>
+<text x="312" y="201" class="gold">RUNNING COMMAND</text>
+<text x="311" y="234" class="cyan">RUNNING COMMAND • Java 21</text>
+<text x="1005" y="234" class="muted"></text>
+<text x="311" y="266" class="">[09:08:12] Download oficial iniciado</text>
+<text x="1005" y="266" class="muted"></text>
+<text x="311" y="298" class="">[09:08:14] 38% recebido</text>
+<text x="1005" y="298" class="muted"></text>
+<text x="311" y="330" class="">[09:08:16] SHA-256 confirmado</text>
+<text x="1005" y="330" class="muted"></text>
+<text x="311" y="362" class="">[09:08:17] Instalador em execução</text>
+<text x="1005" y="362" class="muted"></text>
+<text x="311" y="394" class=""></text>
+<text x="1005" y="394" class="muted"></text>
+<text x="311" y="426" class="">Pressione Ctrl+C para solicitar cancelamento</text>
+<text x="1005" y="426" class="muted"></text>
+<text x="648" y="648" class="muted small">Estado e versões são exemplos; serão detectados no host.</text>
+<rect x="20" y="671" width="1232" height="109" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="32" y="660" width="297" height="22" fill="#101218"/>
+<text x="40" y="677" class="gold">COMANDOS DURANTE A EXECUÇÃO</text>
+<text x="38" y="715" class="small">[PageUp] rolar para cima</text>
+<text x="38" y="742" class="small">[PageDown] rolar para baixo</text>
+<text x="660" y="715" class="small">[Ctrl+C] solicitar cancelamento</text>
+<text x="660" y="742" class="small">[L] abrir log completo</text>
+</svg>
