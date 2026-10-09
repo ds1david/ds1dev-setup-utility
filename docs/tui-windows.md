@@ -1,6 +1,6 @@
 # TUI Windows — experiência inspirada no Linutil
 
-Status: **especificação e mockups conceituais; interface ainda não implementada**. Data: 2026-10-09.
+Status: **especificação e mockups conceituais; primeira TUI PowerShell funcional, TUI Rust pendente**. Data: 2026-10-09.
 
 [Índice](01-indice.md) · [Plano M0–M11](plano-de-execucao.md) · [Executor](arquitetura-executor.md)
 
@@ -128,3 +128,7 @@ Desenvolver B1–B3 após estabilizar a detecção atual. U1 pode usar fixtures 
 - [ ] Erro anterior à transcrição, falha nativa e cancelamento não fecham o diagnóstico.
 - [ ] Modo textual preserva funcionalidade em terminal incompatível.
 - [ ] Retorno ao terminal restaura cursor, cores e modo de entrada; nenhuma instalação é anunciada sem pós-verificação.
+
+## Primeira implementação funcional (PowerShell 7)
+
+O menu provisório foi substituído por um layout nativo PowerShell com categorias derivadas dos manifestos (`Category`), box de tarefas, rodapé de comandos, busca, seleção de versão, Test/Plan/Apply e confirmação. O preflight roda antes de abrir o catálogo; os consentimentos de correção são modais textuais. Em Console Host sem 80×24 ou com entrada/saída redirecionada, permanece o menu linear. Ao executar uma tarefa, a lista cede lugar à saída do comando, retornando após Enter. O log atual é `Start-Transcript`; a captura integral de processos e a TUI Rust ainda pertencem aos marcos M2/M10. Testes automatizados cobrem o motor; testes interativos Windows permanecem necessários para homologar navegação, cores e redimensionamento.

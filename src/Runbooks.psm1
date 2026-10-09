@@ -16,6 +16,8 @@ function Get-RunbookCatalog {
         if ($data.Id -isnot [string] -or $data.Id -notmatch '^[a-zA-Z0-9][a-zA-Z0-9._-]*$') { throw 'Id inválido.' }
         if ($ids.ContainsKey($data.Id)) { throw "Id duplicado: $($data.Id)" }
         if ($data.Title -isnot [string] -or [string]::IsNullOrWhiteSpace($data.Title)) { throw 'Title inválido.' }
+        if (-not $data.ContainsKey('Category')) { $data.Category = 'Outros' }
+        if ($data.Category -isnot [string] -or [string]::IsNullOrWhiteSpace($data.Category)) { throw 'Category inválida.' }
         if ($data.Environment -notin 'Windows','Ubuntu','MSYS2','Integrated') { throw 'Environment inválido.' }
         if ($data.Implemented -isnot [bool] -or $data.SupportsVersions -isnot [bool]) { throw 'Flags devem ser booleanas.' }
         if ($data.DependsOn -isnot [array]) { throw 'DependsOn deve ser um array.' }
@@ -69,6 +71,11 @@ function Test-RunbookDependencies {
     [CmdletBinding()]
     param([Parameter(Mandatory)][hashtable]$Runbook, [Parameter(Mandatory)][array]$Catalog)
     $byId = @{}; foreach ($task in $Catalog) { $byId[$task.Id] = $task }
+    if ($Runbook.Id -ne 'prerequisites') {
+        if (-not $byId.ContainsKey('prerequisites')) { throw 'Runbook prerequisites ausente; execução bloqueada.' }
+        $preflight = Invoke-RunbookHandler -Runbook $byId['prerequisites'] -Mode Test
+        if (-not $preflight.Detected) { throw 'Pré-requisitos Windows pendentes; execução bloqueada.' }
+    }
     $checked = @{}
     function Test-Dependency([string]$Id) {
         if ($checked.ContainsKey($Id)) { return }

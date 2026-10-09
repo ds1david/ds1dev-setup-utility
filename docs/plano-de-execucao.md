@@ -344,3 +344,16 @@ Primeira tentativa reportada: Windows parcialmente configurado, PowerShell 5.1 n
 
 
 - [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](tui-windows.md)
+
+## Decisão incremental — gate de pré-requisitos e primeira TUI funcional (2026-10-09)
+
+- [x] Criar `prerequisites` descoberto pelo catálogo e executado automaticamente no início do executor PS7.
+- [x] Exigir conformidade do preflight em `Test-RunbookDependencies` para **todos** os outros runbooks, inclusive novos.
+- [x] Implementar consentimento separado para cada recurso opcional Windows reparável, duas recusas encerrando a execução, revalidação e reinício pendente como bloqueio.
+- [x] Adicionar primeira TUI PowerShell sem dependências externas: categorias dos manifestos, navegação, busca, versão explícita, Test/Plan/Apply e confirmação, com menu linear alternativo.
+- [x] Testar em ambiente simulado duas recusas, autorização na segunda tentativa, NoOp e bloqueio manual; expandir suíte de descoberta.
+- [ ] Homologar sondagem de DISM, estados EnablePending/DisabledWithPayloadRemoved e reparo em Windows 11 limpo e parcialmente preparado, com privilégio elevado.
+- [ ] Implementar captação contínua de stdout/stderr, logs automáticos auditáveis e executor de processos do M2; o transcript atual tem cobertura limitada.
+- [ ] Evoluir TUI para o design completo e Rust/Ratatui de M10, mantendo motor e manifestos como fonte de verdade.
+
+Política deliberada nesta fase: sem conformidade com recursos WSL2, nenhum outro runbook é liberado, mesmo uma toolchain Windows independente. Separar esse gate por capacidade é evolução possível apenas mediante revisão explícita da decisão. O preflight não reinicia Windows automaticamente nem reconfigura BIOS/UEFI; essas pendências são explicadas e interrompem a sessão.

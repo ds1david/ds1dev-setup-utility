@@ -5,7 +5,8 @@ param(
   [switch]$Validate,
   [switch]$Plan,
   [switch]$Apply,
-  [string]$Version
+  [string]$Version,
+  [switch]$NoTui
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -19,8 +20,11 @@ if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'Execute bootstrap.ps1 para i
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Import-Module (Join-Path $PSScriptRoot 'Runbooks.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'Preflight.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'Tui.psm1') -Force
 $RunbookRoot = Join-Path $RepoRoot 'runbooks'
 $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }
+$StatusCache = @{}
 $LogHome = Join-Path $env:ProgramData 'DS1DevSetup\logs'
 $StateHome = Join-Path $env:ProgramData 'DS1DevSetup\state'
 New-Item -ItemType Directory -Force -Path $LogHome,$StateHome | Out-Null
@@ -49,19 +53,26 @@ function Write-Observation([string]$id,[bool]$found) {
   $entry | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $path -Encoding UTF8
 }
 function Get-Status([string]$id) {
+  $cached = $StatusCache[$id]
+  if ($cached -and ((Get-Date) - $cached.At).TotalSeconds -lt 15) { return $cached.Value }
   $step = Get-Step $id
-  try { Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks }
-  catch { return "Blocked ($($_.Exception.Message))" }
-  if (-not $step.Implemented) { return 'Planned' }
-  if (Test-Step $id) { return 'Detected' }
-  return 'Ready'
+  $state = try {
+    Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
+    if (-not $step.Implemented) { 'Planned' }
+    elseif (Test-Step $id) { 'Detected' }
+    else { 'Ready' }
+  } catch { "Blocked ($($_.Exception.Message))" }
+  $StatusCache[$id] = @{At=(Get-Date);Value=$state}
+  return $state
 }
 function Invoke-Step([string]$id,[string]$mode,[string]$requestedVersion) {
+  $StatusCache.Clear()
   $step = Get-Step $id
   Write-Host "[$id] $($step.Title) | mode=$mode | environment=$($step.Environment)"
-  # Test permite diagnóstico mesmo com pré-requisitos ausentes; Plan/Apply são bloqueados.
-  if ($mode -ne 'Test') { Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks }
+  # The global prerequisite gate applies even to read-only execution of other runbooks.
+  Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
   $context = @{ RunId=$runId; LogPath=$log; StateHome=$StateHome; Environment=$step.Environment }
+  if ($id -eq 'prerequisites') { $context.ShowDetails = $true }
   $result = Invoke-RunbookHandler -Runbook $step -Mode $mode -Version $requestedVersion -Context $context
   if ($mode -eq 'Test') {
     Write-Host "Detector: $($result.Detected)"
@@ -77,15 +88,36 @@ function Invoke-Step([string]$id,[string]$mode,[string]$requestedVersion) {
 }
 try {
   Write-Host "DS1 Dev Setup Utility | $($PSVersionTable.PSVersion) | $runId"
+  # Every entry point checks the real host before releasing the catalog.
+  # The prerequisite runbook itself remains available for explicit diagnosis.
+  if (-not ($Task -eq 'prerequisites' -and -not $Apply)) {
+    $consent = {
+      param($check,$attempt)
+      if ([Console]::IsInputRedirected) { throw 'Correção exige consentimento interativo. Abra o bootstrap em um terminal Windows.' }
+      $reason = @($check.Detail,"Operação: $($check.Repair)","Tentativa $attempt de 2.",
+        'Sem este requisito, os demais runbooks não poderão ser executados.')
+      $answer = Show-Ds1Modal 'CORRIGIR PRÉ-REQUISITO' $reason 'Autoriza esta correção? [s/N]'
+      return $answer
+    }
+    $null = Invoke-Ds1Preflight -Catalog $Catalog.Tasks -Context @{RunId=$runId;LogPath=$log;StateHome=$StateHome} -Consent $consent
+  }
   if ($List) {
     foreach ($s in $Catalog.Tasks) { Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id)) }
   } elseif ($Task) {
+    if ($Task -eq 'prerequisites' -and $Apply) { Write-Host 'Pré-requisitos verificados pelo fluxo de autorização.'; return }
     Invoke-Step $Task $(if($Apply){'Apply'}elseif($Plan){'Plan'}else{'Test'}) $Version
   } elseif ($Validate) {
     foreach ($s in $Catalog.Tasks) {
       Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id))
     }
   } else {
+    if (-not $NoTui) {
+      $handled = Start-Ds1Tui -Catalog $Catalog.Tasks -Status {param($id) Get-Status $id} -Execute {
+        param($id,$mode,$requestedVersion) Invoke-Step $id $mode $requestedVersion
+      } -Reload { $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }; $StatusCache.Clear(); return $Catalog.Tasks }
+      if ($handled) { return }
+      Write-Host 'Terminal sem suporte ao layout interativo; usando menu linear.'
+    }
     do {
       Write-Host ''
       foreach ($s in $Catalog.Tasks) { Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id)) }
@@ -99,7 +131,7 @@ try {
         continue
       }
       if ($choice -eq 'R') {
-        try { $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) } }
+        try { $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }; $StatusCache.Clear() }
         catch { Write-Warning $_.Exception.Message }
         continue
       }

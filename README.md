@@ -24,7 +24,7 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 2. **Bootstrap sem instalar dependências para si próprio:** apenas recursos já disponíveis no Windows e ferramentas nativas do SO. Baixar o pacote é distinto de executar suas tarefas.
 3. **Estado observado acima do estado registrado:** nunca concluir que uma ferramenta existe apenas porque um manifesto diz que foi instalada.
 4. Cada ação deve suportar detecção do estado atual, planejamento e aplicação condicional, com logs completos e redigidos contra segredos.
-5. WSL/Ubuntu e MSYS2 são dependências bloqueantes: não executar toolchains nem personalização antes da validação da instalação do respectivo ambiente.
+5. O gate inicial exige os recursos Windows necessários ao WSL2 antes de liberar qualquer outro runbook. Ubuntu e MSYS2 continuam dependências específicas das tarefas dos seus ambientes.
 6. Versionamento selecionável para Java, Maven, Gradle, Python e outras ferramentas somente quando houver estratégia de instalação e verificação daquela versão.
 7. `C:\workspace\local\{bin,env,config}` (Windows), `/workspace/local/{bin,env,config}` (Ubuntu ext4) e `/workspace/local/{bin,env,config}` (MSYS2 sob o diretório da instalação) são **independentes**.
 
@@ -52,7 +52,7 @@ O primeiro script é executado da origem informada; durante o handoff remoto, o 
 - `src/ds1-setup.ps1`: lista tarefas, mostra bloqueios de dependências, permite `-Plan` e `-Validate`, registra transcrição da sessão e observações em `%ProgramData%\\DS1DevSetup`.
 - `src/Runbooks.psm1`: descobre manifestos, valida dependências e executa handlers Test/Plan/Apply.
 - `runbooks/**/runbook.psd1`: catálogo descoberto por pasta. Adicionar manifesto e script é suficiente; pressione R para recarregar a cópia local. O antigo `config/catalog.psd1` não é consumido.
-- As dez tarefas históricas permanecem com `Implemented=$false`. Novos runbooks com Apply implementado podem ser executados; a verificação posterior é obrigatória. Os instaladores versionados históricos ainda não existem.
+- O runbook `prerequisites` verifica Windows/elevação/PowerShell/virtualização/recursos WSL2 automaticamente e bloqueia os demais até estar conforme. As dez tarefas históricas permanecem com `Implemented=$false`. Novos runbooks com Apply implementado podem ser executados; a verificação posterior é obrigatória. Os instaladores versionados históricos ainda não existem.
 - `tests/runbooks.tests.ps1`: testes sem módulos externos para descoberta, execução e validação do contrato.
 
 Para uso local, após revisar o conteúdo:
@@ -66,7 +66,7 @@ O modo `irm ... | iex` é tecnicamente possível apontando para o bootstrap remo
 
 ## Limitações atuais
 
-O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou logging multiplexado de subprocessos. O log atual é a transcrição PowerShell e não substitui captura auditável de stdout/stderr de futuros processos. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
+A TUI PowerShell 7 é navegável por categorias e busca, mostra bloqueios e permite Test/Plan/Apply de runbooks implementados, com seleção de versão quando suportada. O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou logging multiplexado de subprocessos. O log atual é a transcrição PowerShell e não substitui captura auditável de stdout/stderr de futuros processos. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
 
 Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e limitações.
 

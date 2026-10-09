@@ -30,12 +30,13 @@ return @{Succeeded=$true}
 }
 try {
     New-Item -ItemType Directory -Path $root | Out-Null
+    Add-Fixture prerequisites
     Add-Fixture base
     $catalog = @(Get-RunbookCatalog $root)
-    Assert ($catalog.Count -eq 1) 'descobrir primeiro runbook'
+    Assert ($catalog.Count -eq 2) 'descobrir prerequisitos e primeiro runbook'
     Add-Fixture extra "'base'"
     $catalog = @(Get-RunbookCatalog $root)
-    Assert ($catalog.Count -eq 2) 'descobrir runbook novo sem alterar executor ou catálogo central'
+    Assert ($catalog.Count -eq 3) 'descobrir runbook novo sem alterar executor ou catálogo central'
     $extra = $catalog | Where-Object Id -eq extra
     Test-RunbookDependencies $extra $catalog
     $marker = Join-Path $root 'applied.txt'
@@ -43,6 +44,10 @@ try {
     Assert ((Get-Content $marker) -eq '21.0.6') 'encaminhar versão e executar handler novo'
     Add-Fixture base '' $false
     Assert-Throws { Test-RunbookDependencies $extra $catalog } 'Dependência não satisfeita'
+    Add-Fixture base
+    Add-Fixture prerequisites '' $false
+    Assert-Throws { Test-RunbookDependencies $extra $catalog } 'Pré-requisitos Windows pendentes'
+    Add-Fixture prerequisites
     Add-Fixture base "'extra'"
     Assert-Throws { Get-RunbookCatalog $root } 'Ciclo'
     Add-Fixture base "'inexistente'"
@@ -69,7 +74,7 @@ try {
     Set-Content $extra.ScriptPath -Value 'param($Mode,$Version,$Context); return @{Succeeded=$false}'
     Assert-Throws { Invoke-RunbookHandler $extra Plan } 'Runbook falhou'
     $production = @(Get-RunbookCatalog (Join-Path $PSScriptRoot '../runbooks'))
-    Assert ($production.Count -eq 10) 'migrar as dez tarefas existentes'
+    Assert ($production.Count -eq 11) 'dez tarefas históricas mais pre-requisitos'
     foreach ($file in Get-ChildItem (Join-Path $PSScriptRoot '..') -Recurse -File | Where-Object Extension -in '.ps1','.psm1','.psd1') {
         $tokens = $null; $parseErrors = $null
         $null = [Management.Automation.Language.Parser]::ParseFile($file.FullName,[ref]$tokens,[ref]$parseErrors)
