@@ -370,3 +370,16 @@ Política deliberada nesta fase: sem conformidade com recursos WSL2, nenhum outr
 - [ ] Homologar comando/resultado, permissões e exportação no Windows 11, inclusive cancelamento, falha de disco e pasta com espaços/acentos.
 
 O log de comandos é gerado somente para operações instrumentadas pelo handler. O transcript PowerShell não substitui captura integral do instalador. Sessões não interativas conservam os arquivos no ProgramData sem solicitar um destino.
+
+## Decisão incremental — proposta do contrato YAML v2 (2026-10-09)
+
+A [especificação de runbooks v2](modelo-runbooks-v2.md) adapta a ideia do usuário: dados e parâmetros com plano de diferenças inspirado em Terraform, steps legíveis inspirados em GitHub Actions e seleção explícita de **destino** e **interpretador** por step. Terraform usa HCL/JSON; YAML será uma linguagem própria e versionada do DS1. O schema v1 PSD1 permanece executável até migração homologada; v2 ainda não é interpretado.
+
+- [x] Documentar a forma proposta `metadata/spec/target/inputs/tasks/checks/apply`, os estados Satisfeito/Requerido/Parcial/Erro e exemplos de Windows, WSL e MSYS2.
+- [ ] Aprovar e congelar schema v2 com parâmetros tipados, referências seguras, `apiVersion`, validação de caminhos, defaults e rejeição de chaves desconhecidas.
+- [ ] Empacotar compilador YAML → JSON versionado para Windows x64, sem depender de Python/Rust no destino; disponibilizar validação no CI e recarga local por R.
+- [ ] Implementar adaptadores por destino/interpretador: Windows pwsh/powershell/cmd/python; WSL bash/sh/python; MSYS2 Bash/sh/Python em UCRT64 inicialmente, com adaptadores opcionais adicionados só após teste.
+- [ ] Implementar protocolo JSON das checagens, diferenciação entre ausência e erro, plano fixado, argumentos sem interpolação textual, código de saída, timeout, cancelamento, logs e retomada.
+- [ ] Migrar um runbook Windows vertical completo e homologá-lo; então migrar exemplos WSL/MSYS2 e as demais páginas da wiki sem IDs duplicados.
+
+Esta decisão acrescenta entregas aos marcos M2–M4 e à homologação M11; não transforma os dez handlers históricos em instaladores nem muda o bootstrap PS5.1. MSYS2 possui vários **ambientes** além de interpretadores instaláveis; o manifesto precisa identificar ambos.

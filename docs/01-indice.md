@@ -40,7 +40,7 @@ Em instalações MSYS2 fora de `C:\msys64`, ajuste o diretório físico do `/wor
 - Variáveis `JAVA_HOME`, `MAVEN_HOME`, `GRADLE_HOME` são nativas de cada SO. Windows usa WinGet para Temurin e ZIP oficial para Maven/Gradle; Ubuntu usa SDKMAN; UCRT64 usa toolchain do pacman.
 ## Mapa de dependências alvo
 
-A numeração organiza a leitura; ambientes opcionais não bloqueiam os demais. O catálogo atual ainda possui tarefas agregadas: a decomposição é trabalho do marco M4.
+A numeração organiza a leitura. O gate global atual exige recursos Windows do WSL2 antes de qualquer outro runbook; depois dele, Ubuntu e MSYS2 são dependências específicas dos próprios ambientes. O catálogo ainda possui tarefas agregadas: a decomposição é trabalho do marco M4.
 
 ```mermaid
 flowchart TD
@@ -84,6 +84,7 @@ Docker Desktop/integração são subetapas com requisitos próprios em 02/03. Sh
 Ações dependentes de ferramentas devem permanecer bloqueadas até que a respectiva preparação seja validada. Os IDs numéricos representam **documentação**, enquanto os IDs estáveis do catálogo devem ser independentes da numeração.
 
 - [Runbooks dinâmicos — adicionar tarefas sem alterar a TUI](runbooks.md)
+- [Proposta YAML v2 — tarefas, checagens, steps e interpretadores](modelo-runbooks-v2.md)
 
 
 - [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](tui-windows.md)

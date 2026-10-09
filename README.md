@@ -16,6 +16,7 @@ Instalador e manual de preparação para Windows 11, Ubuntu WSL2 e MSYS2 UCRT64.
 - [08 — Backup e recuperação](docs/08-backup.md)
 - [Arquitetura do executor, segurança e idempotência](docs/arquitetura-executor.md)
 - [Adicionar runbooks sem alterar a TUI](docs/runbooks.md)
+- [Proposta de contrato YAML v2 para tarefas e interpretadores](docs/modelo-runbooks-v2.md)
 - [Plano detalhado de execução e critérios de aceite](docs/plano-de-execucao.md)
 
 ## Princípios

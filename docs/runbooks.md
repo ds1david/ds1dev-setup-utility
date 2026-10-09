@@ -1,5 +1,7 @@
 # Runbooks descobertos dinamicamente
 
+Este documento descreve o contrato **PSD1/PowerShell v1 em execução**. O [modelo YAML v2](modelo-runbooks-v2.md) é uma proposta de migração; arquivos YAML ainda não são interpretados pelo app.
+
 A TUI lê recursivamente `runbooks/**/runbook.psd1`. Não há lista de IDs nem detectores específicos na interface. Para adicionar uma tarefa, publique uma pasta com manifesto e script; não altere `src/ds1-setup.ps1` nem o antigo `config/catalog.psd1`.
 
 ## Adicionar um runbook
