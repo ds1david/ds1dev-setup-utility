@@ -3,6 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot '../src/Runbooks.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot '../src/Preflight.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot '../src/TaskPhases.psm1') -Force
 $pre = (Get-RunbookCatalog -Root (Join-Path $PSScriptRoot '../runbooks') | Where-Object Id -eq prerequisites)
 $catalog = @($pre)
 $script:checks = 0
@@ -22,7 +23,8 @@ $probe = {
     }
 }
 $repair = {param($id) $script:repairCalls += $id; $script:featureEnabled=$true}
-$context = @{Probe=$probe;Repair=$repair}
+$commandLog = Join-Path ([IO.Path]::GetTempPath()) ('ds1-preflight-' + [guid]::NewGuid().ToString('N') + '.jsonl')
+$context = @{Probe=$probe;Repair=$repair;CommandLogPath=$commandLog}
 $result=Invoke-RunbookHandler -Runbook $pre -Mode Test -Context $context
 Assert (-not $result.Detected) 'Missing WSL feature was not detected'
 $plan=Invoke-RunbookHandler -Runbook $pre -Mode Plan -Context $context
@@ -36,6 +38,8 @@ $script:promptCalls=@()
 $secondChance = {param($check,$attempt) $script:promptCalls += $attempt; if($attempt -eq 1){return 'n'};return 's'}
 Assert (Invoke-Ds1Preflight -Catalog $catalog -Context $context -Consent $secondChance) 'Second permission should allow repair'
 Assert ($script:promptCalls.Count -eq 2 -and $script:repairCalls.Count -eq 1) 'Repair should run once after consent'
+$repairEvents = @(Get-Ds1PhaseEvents -Path $commandLog -TaskId prerequisites | Where-Object Phase -eq 'Execução')
+Assert ($repairEvents.Count -eq 2 -and $repairEvents[1].Status -eq 'Satisfeito') 'Authorized repair must record command and result'
 $script:promptCalls=@()
 Assert (Invoke-Ds1Preflight -Catalog $catalog -Context $context -Consent $decline) 'Re-run on compliant host should pass'
 Assert ($script:promptCalls.Count -eq 0 -and $script:repairCalls.Count -eq 1) 'Compliant rerun should be NoOp'
@@ -48,3 +52,4 @@ $manualProbe = {
 Assert-Throws { Invoke-Ds1Preflight -Catalog $catalog -Context @{Probe=$manualProbe;Repair=$repair} -Consent $secondChance } 'ação manual'
 Assert ($script:repairCalls.Count -eq 1) 'Manual block must not invoke an unsafe repair'
 Write-Host "PASS: $script:checks prerequisite checks (mocked, no Windows changes)."
+Remove-Item -LiteralPath $commandLog -ErrorAction SilentlyContinue

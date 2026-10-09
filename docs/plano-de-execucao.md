@@ -357,3 +357,16 @@ Primeira tentativa reportada: Windows parcialmente configurado, PowerShell 5.1 n
 - [ ] Evoluir TUI para o design completo e Rust/Ratatui de M10, mantendo motor e manifestos como fonte de verdade.
 
 Política deliberada nesta fase: sem conformidade com recursos WSL2, nenhum outro runbook é liberado, mesmo uma toolchain Windows independente. Separar esse gate por capacidade é evolução possível apenas mediante revisão explícita da decisão. O preflight não reinicia Windows automaticamente nem reconfigura BIOS/UEFI; essas pendências são explicadas e interrompem a sessão.
+
+## Decisão incremental — tarefas com fases e logs exportáveis (2026-10-09)
+
+- [x] Mapear checagem por tarefa para Satisfeito/Requerido/Parcial, com `Checks` granulares no preflight e adaptação de `Detected` dos handlers legados.
+- [x] Fazer Test imediatamente antes de Apply, encerrar como NoOp quando conforme, e confirmar Satisfeito somente após novo Test; falhas marcam Erro na sessão.
+- [x] Registrar cada correção implementada do preflight com etapa, comando, início, resultado/erro e data em JSONL; permitir abrir os eventos da tarefa na TUI.
+- [x] Ao sair do app interativo, oferecer cópia do JSONL e da transcrição em pasta escolhida, preservando os originais e evitando sobrescrita.
+- [ ] Migrar os dez runbooks históricos para tarefas granulares com checagens confiáveis, planos de diferenças e Apply idempotente; `Implemented=$false` permanece até homologação.
+- [ ] Estender o mesmo registro detalhado aos provedores e subprocessos nativos, com stdout/stderr contínuos, ocultação de segredos e correlação por etapa (M2/M3).
+- [ ] Exibir no painel principal a lista expandida de fases de cada runbook e uma janela de logs rolável; a primeira TUI mostra o estado agregado e abre os eventos em tela textual.
+- [ ] Homologar comando/resultado, permissões e exportação no Windows 11, inclusive cancelamento, falha de disco e pasta com espaços/acentos.
+
+O log de comandos é gerado somente para operações instrumentadas pelo handler. O transcript PowerShell não substitui captura integral do instalador. Sessões não interativas conservam os arquivos no ProgramData sem solicitar um destino.

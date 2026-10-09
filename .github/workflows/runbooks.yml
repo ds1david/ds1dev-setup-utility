@@ -15,6 +15,7 @@ jobs:
         run: |
           ./tests/runbooks.tests.ps1
           ./tests/preflight.tests.ps1
+          ./tests/task-phases.tests.ps1
       - name: Validate bootstrap without installing
         shell: pwsh
         run: |

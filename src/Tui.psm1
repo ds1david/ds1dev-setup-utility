@@ -42,9 +42,9 @@ function Write-Ds1Frame([array]$Tasks,[array]$Categories,[int]$CategoryIndex,[in
     }
     if($Tasks.Count -eq 0){Put ($rightX+2) 5 'Nenhum runbook nesta categoria/busca.' 'Yellow'}
     Box 0 $footerY $width 6 'COMANDOS DE NAVEGAÇÃO'
-    Put 2 ($footerY+1) '[Tab] trocar painel    [Up/Down] navegar    [Enter] detalhes'
+    Put 2 ($footerY+1) '[Tab] trocar painel    [Up/Down] navegar    [Enter] verificar'
     Put 2 ($footerY+2) '[/] buscar            [E] escolher versão   [P] planejar'
-    Put 2 ($footerY+3) '[V] verificar         [A] aplicar           [R] recarregar   [Q] sair' 'Yellow'
+    Put 2 ($footerY+3) '[V] verificar  [A] aplicar  [L] logs  [R] recarregar  [Q] sair' 'Yellow'
 }
 function Show-Ds1Modal([string]$Title,[string[]]$Lines,[string]$Prompt='Pressione Enter para voltar') {
     Write-Host ''
@@ -53,7 +53,8 @@ function Show-Ds1Modal([string]$Title,[string[]]$Lines,[string]$Prompt='Pression
     Write-Host ('+----------------------------------------------------------------+') -ForegroundColor Yellow
     return (Read-Host $Prompt)
 }
-function Start-Ds1Tui([array]$Catalog,[scriptblock]$Status,[scriptblock]$Execute,[scriptblock]$Reload) {
+function Start-Ds1Tui([array]$Catalog,[scriptblock]$Status,[scriptblock]$Execute,
+                      [scriptblock]$Reload,[scriptblock]$Logs = {}) {
     if(-not(Test-Ds1Terminal)){return $false}
     $oldColor=[Console]::ForegroundColor;$selected=0;$categoryIndex=0;$categoriesFocused=$false
     $query='';$versions=@{}
@@ -75,20 +76,25 @@ function Start-Ds1Tui([array]$Catalog,[scriptblock]$Status,[scriptblock]$Execute
                 'Q' {return $true}
                 'R' {$Catalog=@(& $Reload);$categoryIndex=0;$selected=0;$query=''}
                 'Oem2' { [Console]::Clear();$query=(Read-Host 'Buscar por título ou ID').Trim();$selected=0 }
-                {$_ -in 'Enter','V','P','A','E'} {
+                {$_ -in 'Enter','V','P','A','E','L'} {
                     if($tasks.Count -eq 0){continue}
                     $task=$tasks[$selected];$mode=switch($key){'P'{'Plan'}'A'{'Apply'}'V'{'Test'}default{'Test'}}
                     [Console]::Clear();Write-Host "[$($task.Id)] $($task.Title) | $mode" -ForegroundColor Cyan
                     try {
-                        if($key -eq 'E'){
+                        if($key -eq 'L') { & $Logs $task.Id }
+                        elseif($key -eq 'E'){
                             if(-not $task.SupportsVersions){Write-Host 'Este runbook não admite versão explícita.'}
-                            else {$inputVersion=Read-Host 'Versão desejada (vazio = padrão)';if($inputVersion){$versions[$task.Id]=$inputVersion}else{$versions.Remove($task.Id)}}
+                            else {$inputVersion=Read-Host 'Versão desejada (vazio = padrão)';if($inputVersion){$versions[$task.Id]=$inputVersion}else{$null=$versions.Remove($task.Id)}}
                         }elseif($key -eq 'A'){
                             $answer=Show-Ds1Modal 'CONFIRMAR EXECUÇÃO' @("Tarefa: $($task.Title)",'O plano será verificado antes da aplicação.') 'Autoriza aplicar? [s/N]'
                             if($answer -notin @('s','S','sim','SIM')){Write-Host 'Aplicação cancelada.'}
                             else{& $Execute $task.Id $mode $(if($versions.ContainsKey($task.Id)){$versions[$task.Id]}else{''})}
                         }else{& $Execute $task.Id $mode $(if($versions.ContainsKey($task.Id)){$versions[$task.Id]}else{''})}
-                    }catch{Write-Host "FALHA: $($_.Exception.Message)" -ForegroundColor Red}
+                    }catch{
+                        Write-Host "FALHA: $($_.Exception.Message)" -ForegroundColor Red
+                        Write-Host 'Etapas e resultado dos comandos registrados:' -ForegroundColor Yellow
+                        & $Logs $task.Id
+                    }
                     $null=Read-Host 'Pressione Enter para voltar à lista (saída permanece no log)'
                 }
             }

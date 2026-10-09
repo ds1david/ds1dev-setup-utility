@@ -22,6 +22,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 Import-Module (Join-Path $PSScriptRoot 'Runbooks.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Preflight.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Tui.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'TaskPhases.psm1') -Force
 $RunbookRoot = Join-Path $RepoRoot 'runbooks'
 $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }
 $StatusCache = @{}
@@ -30,10 +31,12 @@ $StateHome = Join-Path $env:ProgramData 'DS1DevSetup\state'
 New-Item -ItemType Directory -Force -Path $LogHome,$StateHome | Out-Null
 $runId = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
 $log = Join-Path $LogHome "run-$runId.log"
+$commandLog = Join-Path $LogHome "commands-$runId.jsonl"
+New-Item -ItemType File -Path $commandLog -ErrorAction Stop | Out-Null
 Start-Transcript -Path $log -IncludeInvocationHeader | Out-Null
 function Test-Step([string]$id) {
   $step = Get-Step $id
-  return (Invoke-RunbookHandler -Runbook $step -Mode Test).Detected
+  return (Invoke-RunbookHandler -Runbook $step -Mode Test)
 }
 function Get-Step([string]$id) {
   $match = @($Catalog.Tasks | Where-Object { $_.Id -eq $id })
@@ -58,9 +61,9 @@ function Get-Status([string]$id) {
   $step = Get-Step $id
   $state = try {
     Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
-    if (-not $step.Implemented) { 'Planned' }
-    elseif (Test-Step $id) { 'Detected' }
-    else { 'Ready' }
+    $phase = Get-Ds1CheckState (Test-Step $id)
+    if (-not $step.Implemented) { "$phase (planejado)" }
+    else { $phase }
   } catch { "Blocked ($($_.Exception.Message))" }
   $StatusCache[$id] = @{At=(Get-Date);Value=$state}
   return $state
@@ -69,21 +72,54 @@ function Invoke-Step([string]$id,[string]$mode,[string]$requestedVersion) {
   $StatusCache.Clear()
   $step = Get-Step $id
   Write-Host "[$id] $($step.Title) | mode=$mode | environment=$($step.Environment)"
-  # The global prerequisite gate applies even to read-only execution of other runbooks.
-  Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
-  $context = @{ RunId=$runId; LogPath=$log; StateHome=$StateHome; Environment=$step.Environment }
+  $context = @{ RunId=$runId; LogPath=$log; CommandLogPath=$commandLog;
+    StateHome=$StateHome; Environment=$step.Environment }
   if ($id -eq 'prerequisites') { $context.ShowDetails = $true }
-  $result = Invoke-RunbookHandler -Runbook $step -Mode $mode -Version $requestedVersion -Context $context
-  if ($mode -eq 'Test') {
-    Write-Host "Detector: $($result.Detected)"
-    Write-Observation $id $result.Detected
-  } elseif ($mode -eq 'Apply') {
-    # Sucesso de Apply só é aceito após uma nova verificação da versão solicitada.
-    $verification = Invoke-RunbookHandler -Runbook $step -Mode Test -Version $requestedVersion -Context $context
-    if (-not $verification.Detected) { throw 'Apply terminou, mas a pós-verificação falhou.' }
-    $record = @{ TaskId=$id; Environment=$step.Environment; Version=$requestedVersion;
-      AppliedAt=(Get-Date).ToString('o'); RunId=$runId; Result=$result }
-    $record | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $StateHome ("applied-$($step.Environment)-$id-$runId.json")) -Encoding UTF8
+  try {
+    # The global prerequisite gate applies even to read-only execution of other runbooks.
+    Test-RunbookDependencies -Runbook $step -Catalog $Catalog.Tasks
+    if ($mode -eq 'Apply') {
+      if (-not $step.Implemented) { throw "Aplicação ainda não implementada: $id" }
+      $before = Invoke-RunbookHandler -Runbook $step -Mode Test -Version $requestedVersion -Context $context
+      $state = Get-Ds1CheckState $before
+      Write-Ds1PhaseEvent $context $id $id 'Checagem' $state '' 'Estado antes da execução.'
+      if ($before.Detected) {
+        Write-Ds1PhaseEvent $context $id $id 'Execução' 'Satisfeito' '' 'Nenhuma alteração necessária (NoOp).'
+        Write-Host 'Satisfeito; nenhuma alteração necessária.'
+        return
+      }
+      Write-Ds1PhaseEvent $context $id $id 'Execução' 'Em execução'
+    }
+    $result = Invoke-RunbookHandler -Runbook $step -Mode $mode -Version $requestedVersion -Context $context
+    if ($mode -eq 'Test') {
+      $state = Get-Ds1CheckState $result
+      Write-Host "Checagem: $state"
+      Write-Ds1PhaseEvent $context $id $id 'Checagem' $state
+      Write-Observation $id $result.Detected
+    } elseif ($mode -eq 'Apply') {
+      # Sucesso de Apply só é aceito após uma nova verificação da versão solicitada.
+      $verification = Invoke-RunbookHandler -Runbook $step -Mode Test -Version $requestedVersion -Context $context
+      if (-not $verification.Detected) { throw 'Apply terminou, mas a pós-verificação falhou.' }
+      Write-Ds1PhaseEvent $context $id $id 'Execução' 'Satisfeito' '' 'Pós-verificação satisfeita.'
+      $record = @{ TaskId=$id; Environment=$step.Environment; Version=$requestedVersion;
+        AppliedAt=(Get-Date).ToString('o'); RunId=$runId; Result=$result }
+      $record | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $StateHome ("applied-$($step.Environment)-$id-$runId.json")) -Encoding UTF8
+    }
+  } catch {
+    Write-Ds1PhaseEvent $context $id $id $(if($mode -eq 'Apply'){'Execução'}else{'Checagem'}) 'Erro' '' $_.Exception.Message
+    $StatusCache[$id] = @{At=(Get-Date);Value='Erro'}
+    throw
+  }
+}
+function Show-ExecutionLog([string]$id) {
+  Write-Host "Log da sessão: $log" -ForegroundColor Cyan
+  Write-Host "Comandos e fases: $commandLog" -ForegroundColor Cyan
+  $entries = @(Get-Ds1PhaseEvents -Path $commandLog -TaskId $id)
+  if (-not $entries.Count) { Write-Host 'Nenhuma etapa registrada para esta tarefa.'; return }
+  foreach ($entry in $entries) {
+    Write-Host "[$($entry.At)] $($entry.StepId) | $($entry.Phase): $($entry.Status)"
+    if ($entry.Command) { Write-Host "  Comando: $($entry.Command)" }
+    if ($entry.Result) { Write-Host "  Resultado: $($entry.Result)" }
   }
 }
 try {
@@ -99,7 +135,7 @@ try {
       $answer = Show-Ds1Modal 'CORRIGIR PRÉ-REQUISITO' $reason 'Autoriza esta correção? [s/N]'
       return $answer
     }
-    $null = Invoke-Ds1Preflight -Catalog $Catalog.Tasks -Context @{RunId=$runId;LogPath=$log;StateHome=$StateHome} -Consent $consent
+    $null = Invoke-Ds1Preflight -Catalog $Catalog.Tasks -Context @{RunId=$runId;LogPath=$log;CommandLogPath=$commandLog;StateHome=$StateHome} -Consent $consent
   }
   if ($List) {
     foreach ($s in $Catalog.Tasks) { Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id)) }
@@ -114,6 +150,7 @@ try {
     if (-not $NoTui) {
       $handled = Start-Ds1Tui -Catalog $Catalog.Tasks -Status {param($id) Get-Status $id} -Execute {
         param($id,$mode,$requestedVersion) Invoke-Step $id $mode $requestedVersion
+      } -Logs { param($id) Show-ExecutionLog $id
       } -Reload { $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }; $StatusCache.Clear(); return $Catalog.Tasks }
       if ($handled) { return }
       Write-Host 'Terminal sem suporte ao layout interativo; usando menu linear.'
@@ -121,7 +158,7 @@ try {
     do {
       Write-Host ''
       foreach ($s in $Catalog.Tasks) { Write-Host ("{0,-6} {1,-35} {2}" -f $s.Id,$s.Title,(Get-Status $s.Id)) }
-      Write-Host '[Q] Sair  [V] Validar tudo  [R] Recarregar runbooks locais'
+      Write-Host '[Q] Sair  [V] Validar tudo  [L] Logs de tarefa  [R] Recarregar runbooks locais'
       $choice = Read-Host 'Selecione uma etapa'
       if ($choice -eq 'Q') { break }
       if ($choice -eq 'V') {
@@ -133,6 +170,11 @@ try {
       if ($choice -eq 'R') {
         try { $Catalog = @{ Tasks = @(Get-RunbookCatalog -Root $RunbookRoot) }; $StatusCache.Clear() }
         catch { Write-Warning $_.Exception.Message }
+        continue
+      }
+      if ($choice -eq 'L') {
+        $logTask = Read-Host 'ID da tarefa (vazio = todas)'
+        Show-ExecutionLog $logTask
         continue
       }
       if ($choice) {
@@ -150,4 +192,16 @@ try {
 } finally {
   Write-Host "Log: $log"
   Stop-Transcript | Out-Null
+  if (-not [Console]::IsInputRedirected) {
+    $save = Read-Host 'Deseja salvar uma cópia dos logs ao sair? [s/N]'
+    if ($save -in @('s','S','sim','SIM')) {
+      $destination = Read-Host 'Diretório onde salvar os logs'
+      if (-not [string]::IsNullOrWhiteSpace($destination)) {
+        try {
+          $copies = @(Export-Ds1SessionLogs -Directory $destination.Trim() -TranscriptPath $log -CommandLogPath $commandLog)
+          foreach ($copy in $copies) { Write-Host "Salvo: $copy" }
+        } catch { Write-Warning "Não foi possível salvar a cópia: $($_.Exception.Message). Originais: $LogHome" }
+      } else { Write-Host "Destino vazio; logs originais: $LogHome" }
+    }
+  }
 }

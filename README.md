@@ -54,6 +54,7 @@ O primeiro script é executado da origem informada; durante o handoff remoto, o 
 - `runbooks/**/runbook.psd1`: catálogo descoberto por pasta. Adicionar manifesto e script é suficiente; pressione R para recarregar a cópia local. O antigo `config/catalog.psd1` não é consumido.
 - O runbook `prerequisites` verifica Windows/elevação/PowerShell/virtualização/recursos WSL2 automaticamente e bloqueia os demais até estar conforme. As dez tarefas históricas permanecem com `Implemented=$false`. Novos runbooks com Apply implementado podem ser executados; a verificação posterior é obrigatória. Os instaladores versionados históricos ainda não existem.
 - `tests/runbooks.tests.ps1`: testes sem módulos externos para descoberta, execução e validação do contrato.
+- `src/TaskPhases.psm1`: estados de checagem por tarefa, registro JSONL de fases/comandos e exportação dos logs. Na TUI, **L** mostra os eventos da tarefa; ao sair de uma sessão interativa, é possível escolher onde salvar uma cópia da transcrição e do JSONL. Os originais ficam em `%ProgramData%\DS1DevSetup\logs`.
 
 Para uso local, após revisar o conteúdo:
 
@@ -66,7 +67,7 @@ O modo `irm ... | iex` é tecnicamente possível apontando para o bootstrap remo
 
 ## Limitações atuais
 
-A TUI PowerShell 7 é navegável por categorias e busca, mostra bloqueios e permite Test/Plan/Apply de runbooks implementados, com seleção de versão quando suportada. O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou logging multiplexado de subprocessos. O log atual é a transcrição PowerShell e não substitui captura auditável de stdout/stderr de futuros processos. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
+A TUI PowerShell 7 é navegável por categorias e busca, mostra bloqueios e permite Test/Plan/Apply de runbooks implementados, com seleção de versão quando suportada. O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou captura integral de stdout/stderr de subprocessos. Os registros detalhados de comando/resultados dependem da instrumentação de cada runbook; por enquanto, a correção dos recursos opcionais Windows está instrumentada. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
 
 Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e limitações.
 

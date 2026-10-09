@@ -6,6 +6,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot '../../src/TaskPhases.psm1')
 
 function New-Check([string]$Id, [string]$Title, [bool]$Satisfied,
                    [string]$Detail, [string]$Repair = '') {
@@ -64,6 +65,12 @@ $checks = @(Get-Checks)
 # On non-Windows, report the observed failure without attempting repairs.
 if ($env:OS -eq 'Windows_NT' -or $Context.ContainsKey('Probe')) { Assert-Checks $checks }
 $pending = @($checks | Where-Object { -not $_.Satisfied })
+if ($Mode -eq 'Test') {
+    foreach ($check in $checks) {
+        Write-Ds1PhaseEvent -Context $Context -TaskId 'prerequisites' -StepId $check.Id -Phase 'Checagem' `
+            -Status $(if($check.Satisfied){'Satisfeito'}else{'Requerido'}) -Result $check.Detail
+    }
+}
 if ($Context.ContainsKey('ShowDetails') -and $Context.ShowDetails) {
     foreach ($check in $checks) {
         $state = if ($check.Satisfied) { 'OK' } else { 'PENDENTE' }
@@ -86,7 +93,8 @@ if ($chosen.Count -ne 1) { throw "Pendência ausente ou já resolvida: $stepId" 
 $check = $chosen[0]
 if (-not $check.Repair) { throw "Correção manual necessária para $($check.Title): $($check.Detail)" }
 if ($Context.ContainsKey('Repair')) {
-    & $Context.Repair $stepId
+    $null = Invoke-Ds1LoggedAction -Context $Context -TaskId 'prerequisites' -StepId $stepId `
+        -Command $check.Repair -Action { & $Context.Repair $stepId } -DescribeResult { 'Correção simulada concluída.' }
     return @{ Succeeded=$true; Changed=$true; StepId=$stepId }
 }
 if ($check.Repair -notmatch '^Enable-WindowsOptionalFeature:(Microsoft-Windows-Subsystem-Linux|VirtualMachinePlatform)$') {
@@ -94,6 +102,9 @@ if ($check.Repair -notmatch '^Enable-WindowsOptionalFeature:(Microsoft-Windows-S
 }
 $featureName = $Matches[1]
 Write-Host "Habilitando recurso do Windows: $featureName"
-$result = Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart -ErrorAction Stop
+$result = Invoke-Ds1LoggedAction -Context $Context -TaskId 'prerequisites' -StepId $stepId `
+    -Command "Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart" `
+    -Action { Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart -ErrorAction Stop } `
+    -DescribeResult { param($r) "Estado: $($r.State); reinício necessário: $($r.RestartNeeded)" }
 if ($result.RestartNeeded) { Write-Warning 'Reinicialização necessária; o fluxo será retomado após novo diagnóstico.' }
 return @{ Succeeded=$true; Changed=$true; StepId=$stepId; PendingReboot=[bool]$result.RestartNeeded }

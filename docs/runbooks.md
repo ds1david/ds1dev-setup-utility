@@ -102,3 +102,13 @@ Para uma pendência reparável (`Disabled` em um dos dois recursos opcionais), o
 Esta é uma política global expressa pelo usuário, inclusive para tarefas Windows que não usam WSL2. Distro Ubuntu e MSYS2 permanecem dependências específicas dos seus próprios runbooks. O preflight não instala uma distribuição Ubuntu nem altera BCD/BIOS. A validação real do DISM/Windows está pendente; testes automatizados usam sondagens simuladas e não alteram o host.
 
 A TUI PowerShell 7 atual permite Tab e setas para categorias/tarefas, `/` para busca, E para versão, V/P/A e modal de confirmação, além de fallback linear em terminal incompatível. A TUI Rust planejada continua em M10. O `Start-Transcript` ainda não substitui o executor de stdout/stderr nativo previsto em M2.
+
+## Fases, estados e logs da primeira implementação
+
+Cada runbook é uma tarefa. A checagem (`Test`) informa **Satisfeito**, **Requerido** ou **Parcial** quando o resultado possui uma lista `Checks` com itens satisfeitos e pendentes. Handlers antigos com apenas `Detected` são mapeados para Satisfeito/Requerido; não ganham checagens granulares fictícias. Tarefas ainda não implementadas indicam `(planejado)`.
+
+Antes de Apply, o motor reexecuta Test. Se estiver conforme, termina como NoOp sem chamar Apply. Caso contrário, executa o handler e só registra **Satisfeito** após um Test posterior bem-sucedido; falhas são marcadas **Erro**. O runbook `prerequisites` é a primeira lista detalhada: host, arquitetura, administrador, PowerShell, virtualização e dois recursos opcionais Windows. Cada correção autorizada tem ID próprio, comando exibível, início e resultado gravados. O handler continua responsável pela idempotência interna quando a tarefa contém mais de uma operação.
+
+Use `Write-Ds1PhaseEvent` para registrar checagens e `Invoke-Ds1LoggedAction` para operações de novos handlers: o segundo exige o texto seguro do comando e uma descrição explícita do resultado ou erro. Nunca incluir tokens, senhas ou argumentos sigilosos. O caminho JSONL é fornecido em `Context.CommandLogPath`. Os registros incluem data, tarefa, etapa, fase, estado, comando e resultado. O log de transcrição da sessão é separado e ainda não captura fielmente stdout/stderr de todos os executáveis nativos.
+
+Na TUI, **L** abre as etapas da tarefa selecionada e uma falha mostra as etapas imediatamente. No menu linear, **L** solicita o ID da tarefa (vazio para todas). Ao sair de uma sessão interativa, o app pergunta se deseja copiar ambos os arquivos e solicita uma pasta; nunca sobrescreve arquivo existente nesse destino. Sem terminal interativo, não há prompt; os originais continuam em `%ProgramData%\DS1DevSetup\logs`. Validar conteúdos antes de compartilhar logs, inclusive a transcrição.

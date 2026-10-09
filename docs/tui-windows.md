@@ -2,6 +2,8 @@
 
 Status: **especificação e mockups conceituais; primeira TUI PowerShell funcional, TUI Rust pendente**. Data: 2026-10-09.
 
+Incremento funcional: estados Satisfeito/Requerido/Parcial por tarefa, Erro após falha de execução, tecla **L** para eventos detalhados e pergunta de exportação dos logs ao sair. O painel expandido de fases, seleção em lote, console rolável e TUI Rust desta especificação ainda são metas futuras.
+
 [Índice](01-indice.md) · [Plano M0–M11](plano-de-execucao.md) · [Executor](arquitetura-executor.md)
 
 ## Direção visual e referência
