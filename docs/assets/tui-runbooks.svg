@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<rect width="1280" height="800" fill="#101218"/>
+<style>text{font-family:Consolas,monospace;font-size:17px;fill:#d7dbe1}.muted{fill:#8f99a7}.cyan{fill:#4cc1da}.gold{fill:#e1bd6d}.title{font-size:24px;font-weight:bold}.small{font-size:15px}</style>
+<text x="30" y="40" class="title">DS1 DEV SETUP</text>
+<text x="330" y="40" class="cyan">Catálogo dinâmico</text>
+<text x="932" y="40" class="gold small">CONCEITO • NÃO IMPLEMENTADO</text>
+<text x="30" y="72" class="muted small">Windows 11 x64  •  PowerShell 7  •  Administrador</text>
+<rect x="320" y="98" width="930" height="64" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="332" y="87" width="120" height="22" fill="#101218"/>
+<text x="340" y="104" class="gold">BUSCA</text>
+<text x="344" y="138" class="muted">Digite para filtrar (/)</text>
+<rect x="28" y="191" width="274" height="456" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="180" width="120" height="22" fill="#101218"/>
+<text x="48" y="197" class="gold">NAVEGAÇÃO</text>
+<rect x="28" y="663" width="274" height="84" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="652" width="120" height="22" fill="#101218"/>
+<text x="48" y="669" class="gold">SISTEMA</text>
+<rect x="320" y="191" width="930" height="556" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="332" y="180" width="407" height="22" fill="#101218"/>
+<text x="340" y="197" class="gold">RUNBOOKS  •  Windows / Ubuntu / MSYS2</text>
+<text x="50" y="240" class="title cyan">DS1</text>
+<text x="50" y="276" class="gold small">Instalação e manutenção</text>
+<text x="51" y="326" class="cyan">&gt; Preparação</text>
+<text x="51" y="364" class="gold">  Toolchains</text>
+<text x="51" y="402" class="gold">  Workspaces</text>
+<text x="51" y="440" class="gold">  Shells</text>
+<text x="51" y="478" class="gold">  IDEs</text>
+<text x="51" y="516" class="gold">  Validação</text>
+<text x="51" y="554" class="gold">  Manutenção</text>
+<text x="47" y="698" class="small">CPU • Intel/AMD</text>
+<text x="47" y="728" class="small">UAC • Admin ativo</text>
+<text x="344" y="232" class="cyan">[D] Windows</text>
+<text x="933" y="232" class="muted"></text>
+<text x="344" y="267" class="">    [x] Git</text>
+<text x="933" y="267" class="muted">Conforme</text>
+<text x="344" y="302" class="">    [x] Java</text>
+<text x="933" y="302" class="gold">Ausente</text>
+<text x="344" y="337" class="">    [ ] Maven</text>
+<text x="933" y="337" class="gold">Ausente</text>
+<text x="344" y="372" class="">[D] Ubuntu WSL2</text>
+<text x="933" y="372" class="muted"></text>
+<text x="344" y="407" class="">    [ ] SDKMAN</text>
+<text x="933" y="407" class="gold">Bloqueado</text>
+<text x="344" y="442" class="">[D] MSYS2 UCRT64</text>
+<text x="933" y="442" class="muted"></text>
+<text x="344" y="477" class="">    [ ] GCC / Autotools</text>
+<text x="933" y="477" class="gold">Pendente</text>
+<rect x="560" y="292" width="475" height="226" fill="#101218" stroke="#6aa4ff" stroke-width="2"/>
+<rect x="634" y="280" width="325" height="24" fill="#101218"/>
+<text x="646" y="300" class="gold">REVISAR SELEÇÕES</text>
+<text x="580" y="343" class="">1. Git  •  detectado, sem ação</text>
+<text x="580" y="375" class="">2. Java • versão escolhida: 21</text>
+<text x="580" y="407" class="">Dependência: workspace Windows</text>
+<text x="582" y="485" class="gold small">[Enter] detalhes / [S] prosseguir / [N] cancelar</text>
+<rect x="28" y="763" width="1222" height="30" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="752" width="198" height="22" fill="#101218"/>
+<text x="48" y="769" class="gold">ATALHOS • CONTEXTO</text>
+<text x="46" y="785" class="small">[↑/↓] navegar   [Espaço] selecionar   [/] buscar   [P] plano   [L] log   [Q] sair</text>
+</svg>

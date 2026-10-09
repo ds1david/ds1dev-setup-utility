@@ -69,3 +69,6 @@ O modo `irm ... | iex` é tecnicamente possível apontando para o bootstrap remo
 O protótipo ainda **não** realiza instalações de Java, Maven, Gradle, Python, Ubuntu, MSYS2 ou perfis, tampouco implementa execução nativa de todos os scripts ou logging multiplexado de subprocessos. O log atual é a transcrição PowerShell e não substitui captura auditável de stdout/stderr de futuros processos. As páginas migradas são documentação histórica revisada parcialmente; ainda precisam ser transformadas em procedimentos de instalação definitivos e testados.
 
 Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e limitações.
+
+
+- [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](docs/tui-windows.md)

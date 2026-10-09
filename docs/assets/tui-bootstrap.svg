@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+<rect width="1280" height="800" fill="#101218"/>
+<style>text{font-family:Consolas,monospace;font-size:17px;fill:#d7dbe1}.muted{fill:#8f99a7}.cyan{fill:#4cc1da}.gold{fill:#e1bd6d}.title{font-size:24px;font-weight:bold}.small{font-size:15px}</style>
+<text x="30" y="40" class="title">DS1 DEV SETUP</text>
+<text x="330" y="40" class="cyan">Bootstrap inicial</text>
+<text x="932" y="40" class="gold small">CONCEITO • NÃO IMPLEMENTADO</text>
+<text x="30" y="72" class="muted small">Windows 11 x64  •  PowerShell 5.1  •  sem elevação</text>
+<rect x="320" y="98" width="930" height="64" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="332" y="87" width="120" height="22" fill="#101218"/>
+<text x="340" y="104" class="gold">BUSCA</text>
+<text x="344" y="138" class="muted">Etapas de inicialização: busca indisponível</text>
+<rect x="28" y="191" width="274" height="456" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="180" width="120" height="22" fill="#101218"/>
+<text x="48" y="197" class="gold">NAVEGAÇÃO</text>
+<rect x="28" y="663" width="274" height="84" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="652" width="120" height="22" fill="#101218"/>
+<text x="48" y="669" class="gold">SISTEMA</text>
+<rect x="320" y="191" width="930" height="556" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="332" y="180" width="120" height="22" fill="#101218"/>
+<text x="340" y="197" class="gold">ETAPAS</text>
+<text x="50" y="240" class="title cyan">DS1</text>
+<text x="50" y="276" class="gold small">Instalação e manutenção</text>
+<text x="51" y="326" class="cyan">&gt; Início</text>
+<text x="51" y="364" class="gold">  Verificar host</text>
+<text x="51" y="402" class="gold">  Elevação</text>
+<text x="51" y="440" class="gold">  PowerShell 7</text>
+<text x="51" y="478" class="gold">  Pacote DS1</text>
+<text x="47" y="698" class="small">CPU • Intel/AMD</text>
+<text x="47" y="728" class="small">UAC • Aguardando</text>
+<text x="344" y="232" class="cyan">[•] Diagnóstico Windows</text>
+<text x="933" y="232" class="muted">Conforme</text>
+<text x="344" y="267" class="">[ ] Solicitar UAC</text>
+<text x="933" y="267" class="gold">A autorizar</text>
+<text x="344" y="302" class="">[ ] PowerShell 7</text>
+<text x="933" y="302" class="gold">Ausente</text>
+<text x="344" y="337" class="">[ ] Obter pacote</text>
+<text x="933" y="337" class="gold">Pendente</text>
+<text x="344" y="372" class="">[ ] Abrir console</text>
+<text x="933" y="372" class="gold">Bloqueado</text>
+<rect x="560" y="292" width="475" height="226" fill="#101218" stroke="#6aa4ff" stroke-width="2"/>
+<rect x="634" y="280" width="325" height="24" fill="#101218"/>
+<text x="646" y="300" class="gold">CONFIRMAR ELEVAÇÃO</text>
+<text x="580" y="343" class="">O Windows solicitará permissão UAC.</text>
+<text x="580" y="375" class="">Nenhum pacote será instalado agora.</text>
+<text x="580" y="407" class="">Você pode cancelar e sair.</text>
+<text x="582" y="485" class="gold small">[Enter] detalhes / [S] prosseguir / [N] cancelar</text>
+<rect x="28" y="763" width="1222" height="30" fill="none" stroke="#667281" stroke-width="2"/>
+<rect x="40" y="752" width="198" height="22" fill="#101218"/>
+<text x="48" y="769" class="gold">ATALHOS • CONTEXTO</text>
+<text x="46" y="785" class="small">[↑/↓] navegar   [Enter] detalhes   [L] log   [Esc] voltar   [Q] sair</text>
+</svg>

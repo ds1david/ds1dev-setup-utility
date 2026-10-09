@@ -84,3 +84,6 @@ Docker Desktop/integração são subetapas com requisitos próprios em 02/03. Sh
 Ações dependentes de ferramentas devem permanecer bloqueadas até que a respectiva preparação seja validada. Os IDs numéricos representam **documentação**, enquanto os IDs estáveis do catálogo devem ser independentes da numeração.
 
 - [Runbooks dinâmicos — adicionar tarefas sem alterar a TUI](runbooks.md)
+
+
+- [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](tui-windows.md)

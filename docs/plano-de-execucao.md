@@ -341,3 +341,6 @@ Revalidar requisitos de fornecedores na implementação de cada provedor. Versõ
 ## Registro de teste de campo — 2026-10-09
 
 Primeira tentativa reportada: Windows parcialmente configurado, PowerShell 5.1 não elevado, consentimento UAC, filho terminou com código 1 sem causa visível. Corrigido o tratamento de erro do handoff (persistência, exibição e pausa antes de sair), com reprodução na sessão original. Download remoto agora decodifica explicitamente respostas em bytes UTF-8. Testes de regressão executam um processo filho real com falha simulada; não testam o UAC Windows. M1 permanece aguardando repetição do teste de campo e instalação limpa.
+
+
+- [Especificação visual: bootstrap Windows e TUI inspirada no Linutil](tui-windows.md)
