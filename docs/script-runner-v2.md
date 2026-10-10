@@ -85,6 +85,28 @@ Exemplo de evento e resultado escritos pelo **coordenador** (valores fictícios)
 
 `result.json` é escrito atomicamente após o processo sair e os pipes serem drenados. Um crash sem resultado final gera `Interrupted` na reabertura; o motor usa novamente Test antes de considerar uma repetição. A TUI mostra caminho, comando sanitizado, código nativo e motivo; ao sair, oferece copiar os logs consolidados para destino escolhido, sem sobrescrever. O transcript PowerShell existente continua como apoio durante a migração, mas não substitui a captura dos processos filhos.
 
+## Ciclo de vida de comando para indicadores `running`
+
+**Contrato proposto; não implementado.** O coordenador publica eventos de transição **além dos chunks de stdout/stderr**. A TUI PowerShell atual e a Rust futura consomem o mesmo conceito de ciclo de vida, sem emitir frames de spinner no log ou dentro do processo filho.
+
+| Evento | Origem real | Efeito no renderer |
+|---|---|---|
+| `command.started` | Spawn do processo/ação confirmado | Iniciar contador e spinner na linha do comando sanitizado |
+| `command.waiting` | Aguardando UAC, aprovação, credencial ou input que exige intervenção | Suspender animação; mostrar `Aguardando ação` e motivo seguro |
+| `command.resumed` | Aguardando ação resolvido e processo ativo | Retomar spinner se ainda houver execução |
+| `command.finished` | Processo encerrou e streams foram drenados | Desligar spinner; exibir exit code, duração e estado de verificação |
+| `command.interrupted` | Reconciliação após crash/quebra de canal sem status confiável | Desligar spinner e exibir `Interrompido/Estado desconhecido` |
+
+O envelope do evento inclui `schema=ds1.runner.event/v1`, `eventType`, `runId`, `taskId`, `stepId`, `commandId`, `sequence`, `at` e estado tipado. Eventos de início incluem `displayCommand` **sanitizado**; término contém `exitCode`, `durationMs`, `outcome` (`succeeded`, `failed`, `cancelled`, `timed_out`, `reboot_required`, `start_failed`) e eventual resultado posterior `verified`. O status visual `Concluído` exige `verified=true` quando houver pós-condição; caso contrário mostrar `Comando encerrado, verificando` ou motivo apropriado. `start_failed` não gera `command.started`. Duplicatas e eventos fora de ordem devem ser idempotentes pelo identificador e número de sequência; uma conclusão nunca retorna a `running` por evento atrasado.
+
+Exemplo de evento estruturado, fictício, registrado **uma vez**, não por quadro da animação:
+
+```json
+{"schema":"ds1.runner.event/v1","eventType":"command.started","runId":"r-001","taskId":"python@ubuntu","stepId":"install","commandId":"install-01","sequence":1,"at":"2026-10-10T04:00:00Z","displayCommand":"uv tool install specify-cli"}
+```
+
+A UI renderiza frames locais por relógio, mantendo animação durante silêncio de stdout/stderr e para todos os processos vivos identificados. O relógio não é prova de atividade. Em reabertura, consultar processo/supervisor para reconciliar eventos abertos; na impossibilidade, registrar `Interrupted`, não deixar um spinner infinito. Etapas opacas não permitem prometer ícone para cada instrução interna; usar steps separados ou checkpoints instrumentados para esse nível de detalhe. O título do terminal é recurso **opt-in** da UI, não do runner; consultar [padrão visual TUI](tui-windows.md#indicador-animado-de-comandos-em-execução-running).
+
 ## Adaptadores e semântica de erro
 
 | Destino + interpretador | Preparação/execução proposta | Critério de falha do bloco |
