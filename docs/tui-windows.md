@@ -87,30 +87,72 @@ Versões são escolhidas por ferramenta, com provedor, arquitetura e compatibili
 
 Ao aplicar, o console de saída ocupa o box principal à direita e substitui a lista de itens, mantendo resumo do lote e progresso. Exibir comando com argumentos sensíveis ocultos, ambiente, stdout/stderr, resultado e caminho do log. Permitir PageUp/PageDown, voltar ao acompanhamento ao vivo e expandir detalhes. O fim da tarefa nunca fecha a tela automaticamente; falhas preservam contexto e motivo.
 
-## Indicador animado de comandos em execução (`running`)
+## Padrão visual de execução — spinner, timer e transição de estados
 
-**Requisito transversal para TUI PowerShell atual e Rust futura; ainda não implementado.** O efeito desejado é semelhante aos indicadores de execução do instalador `uv` e das sessões Codex: uma pequena animação de atividade na **mesma linha do comando**, visível mesmo quando o processo não imprime nada. Não reproduzir literalmente arte ou lógica de outro produto.
+**Especificação, ainda não implementação.** O DS1 deve reproduzir a ergonomia de feedback das CLIs modernas (por exemplo, instalações via \`uv\` e sessões Codex), mas com identidade própria. A linha de status é **dinâmica e persistente**: a mesma linha visual passa de espera para atividade e resultado final; linhas de stdout/stderr do comando são preservadas em painel/log separado, sem misturar frames de animação.
 
-Exemplo de apresentação (cada quadro é uma atualização da **mesma** linha, não uma nova linha de log):
+### Exemplo canônico — linha única por comando
 
-```text
-⠋ Em execução  [00:00:12]  uv tool install specify-cli
-⠙ Em execução  [00:00:13]  uv tool install specify-cli
+\`\`\`text
+? Executar migração da tabela users? [s/N]              ← aguardando confirmação
 
-✓ Concluído     [00:00:18]  uv tool install specify-cli
-✗ Falhou (1)    [00:00:04]  gradle build
-! Interrompido  [00:00:09]  wsl --install
-```
+⠋ Executando migração da tabela users... (4s)          ← execução ativa, spinner ciano
+⠙ Executando migração da tabela users... (4.1s)        ← próximo frame na MESMA linha
 
-1. O motor sinaliza **início real**, atualizações opcionais de estado (incluindo `Aguardando ação`) e **fim definitivo** para cada unidade de execução identificada por `runId/taskId/stepId/commandId`. O estado não deriva do último caractere impresso ou do tempo desde o último log. Uma etapa opaca aparece como **uma etapa**, salvo checkpoints explícitos do próprio script.
-2. A animação percorre `⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏` a ~8–12 quadros/s, **somente enquanto a execução estiver realmente ativa**. Tempo decorrido é calculado por relógio monotônico quando disponível. A frequência deve ser limitada e desacoplada de stdout/stderr; não gerar carga proporcional ao número de linhas impressas. Quando há várias ações simultâneas, cada linha mantém seu próprio estado sem sobrescrever as demais.
-3. Estados finais substituem spinner por marca e mensagem claras: `Concluído` **após pós-verificação**, `Falhou`, `Cancelado`, `Tempo esgotado`, `Reinício necessário` ou `Interrompido`. Saída 0 sem pós-verificação positiva não autoriza sucesso. Enquanto aguarda consentimento/UAC/entrada do usuário, suspender animação e mostrar `Aguardando ação`.
-4. No bootstrap nativo PS5.1, Windows Terminal/Console Host ou terminal sem Braille, usar `| / - \` ou indicador estático `[RUNNING]`; nenhuma fonte especial é requisito. `DS1_NO_SPINNER=1`, sem TTY, leitor de tela ou opção de movimento reduzido geram estados textuais sem reescrita repetida. `NO_COLOR` elimina cor, mas preserva estado textual. Com resize/scroll/output intenso, o renderer deve reservar/reconciliar a linha ativa sem corromper stdout/stderr.
-5. **Título da aba/janela (opcional):** quando o terminal permitir e a sessão for controlada pelo DS1, atualizar o título para `⠋ DS1 em execução — <tarefa>`, com a mesma fonte de estado do indicador inline. OSC 0/2 só sob detecção de suporte e stdout interativo; restaurar título original em conclusão, falha e encerramento, inclusive exceção/Ctrl+C. Nunca inserir sequências OSC em pipes, transcrições ou logs. Se o título não puder ser controlado, **o indicador na linha continua obrigatório**.
-6. A TUI é **apenas consumidora** dos eventos; não simular progresso percentual nem declarar processo vivo quando ele já terminou. Se o stream cair, houver reinicialização ou o estado real ficar desconhecido, remover animação e mostrar `Estado desconhecido/Interrompido` até reconciliar. Não bloquear cancelamento, entrada de usuário nem pós-verificação para animar.
-7. Históricos `events.jsonl`, transcrição e arquivos exportados registram apenas início, fim, duração, comando sanitizado e resultado (eventos de espera quando pertinentes), **nunca cada frame**. O feedback visual não deve alterar códigos de saída, consentimento, comportamento idempotente nem segredos redigidos.
+✔ Migração da tabela users concluída! (5.2s)           ← conclusão validada
 
-**Critérios para implementação:** fixture silenciosa por pelo menos 5 segundos; concorrência; sequência Test→Plan→Apply→Verify; erro de spawn, exit code não zero, cancelamento, timeout e crash; Console Host/Windows Terminal, 80×24 e 120×32, sem TTY, saída redirecionada, Unicode indisponível e modo sem animação. O indicador inline precisa atualizar durante o silêncio e cessar até o próximo refresh após o evento final. Vinculado a [002](../specs/002-safe-executor-contract/spec.md), [008](../specs/008-yaml-v2-runner/spec.md) e [009](../specs/009-rust-tui-release/spec.md).
+✖ Falha ao conectar ao banco de dados. (1.1s)          ← exemplo de erro
+\`\`\`
+
+Os exemplos acima são **estados alternativos** e frames sucessivos, não cinco linhas a anexar ao log. Quando a aplicação diferencia operação de tarefa/runbook, usar uma linha de resumo da tarefa e uma linha por comando ativo; a linha-pai agrega o estado dos filhos, sem simular execução para ações não iniciadas. Em etapas opacas, só mostrar a etapa inteira, a menos que o próprio script emita checkpoints instrumentados.
+
+### Tokens de estilo e comportamento
+
+| Elemento | Estilo de referência | Regra |
+|---|---|---|
+| Spinner | Ciano \`#00A3FF\` / equivalente ANSI ciano | 10 quadros Braille \`⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏\`, alternando a cada **80–100 ms**, limitado a aproximadamente 10–12,5 frames/s enquanto ativo |
+| Texto principal | Cor de primeiro plano do tema, legível | \`Executando <descrição legível>...\`; comando real redigido disponível nos detalhes, nunca exibir token/senha |
+| Metadados | Cinza/esmaecido (\`dim\`) | Tempo decorrido \`(4s)\`, \`(5.2s)\`, \`(1m12s)\`; progresso percentual só se houver fonte real verificável |
+| Aguardando ação | \`?\` neutro ou amarelo | Exibir pergunta e ação padrão segura, como \`[s/N]\`; **não** iniciar spinner antes de consentimento |
+| Concluído | \`✔\` verde + frase conclusiva | Somente depois de \`exitCode=0\` e da pós-verificação exigida; substituir o spinner, manter duração |
+| Erro | \`✖\` vermelho + causa curta | Exibir falha real, duração e código/categoria nos detalhes; nenhuma mensagem genérica que esconda erro |
+| Aguardando/pausado | \`?\` amarelo + \`Aguardando ação\` | Pausar spinner durante prompts/UAC/input que dependam do usuário |
+| Verificando | \`◌\` neutro + \`Verificando resultado...\` | Processo já encerrou, mas pós-condição está pendente; não declarar sucesso antes da verificação |
+| Cancelado/timeout/reinício | \`!\` amarelo + estado explícito | Parar animação; preservar motivo, resultado e próximos passos |
+| Sem TTY/acessibilidade | \`[RUNNING]\`, \`[OK]\`, \`[FAIL]\` | Sem frames repetidos nem dependência de Braille/Nerd Fonts |
+
+Ciano \`#00A3FF\` é uma **preferência visual**, não uma exigência de truecolor: quando indisponível, usar a cor ANSI mais próxima; sob \`NO_COLOR\`, usar monocromático, mantendo texto e símbolos de estado. O texto atenuado não deve perder contraste essencial. Os símbolos finais \`✔/✖\` também têm fallback ASCII \`[OK]/[FAIL]\`. Evitar emojis multicoluna; preservar o layout sob fontes e encodings diferentes.
+
+**Timer:** usar relógio monotônico no processo de renderização, iniciando em \`command.started\` e congelando em \`command.finished\` ou equivalente; não zerar ao redesenhar/rolar. Sugestão: durante a execução mostrar segundos inteiros, ou um decimal quando disponível; após a conclusão, exibir a duração final com até uma casa decimal, e \`m/s\` para períodos longos. O tempo decorrido não prova progresso real nem substitui heartbeat do supervisor.
+
+### Máquina de estados canônica
+
+\`\`\`text
+[?] Aguardando autorização
+    ├── Não autorizado ──> [-] Cancelado (sem iniciar o comando)
+    └── Autorizado ──> [⠋] Executando (timer + spinner)
+                           ├── [?] Aguardando ação ──> [⠋] Retomado
+                           ├── [!] Cancelado / Timeout / Interrompido
+                           └── Processo terminou ──> [◌] Verificando
+                                                        ├── [✔] Sucesso confirmado
+                                                        ├── [✖] Pós-verificação falhou
+                                                        └── [!] Reinício necessário
+\`\`\`
+
+Um processo não iniciado, uma falha de spawn ou recusa de consentimento **nunca** ganha spinner fictício. Terminar com código zero não significa, por si, que o runbook alcançou o estado desejado. Eventos tardios/duplicados não podem ressuscitar estados terminais. Em perda de comunicação, reconciliar com o supervisor/processo; se isso falhar, mostrar \`Interrompido/Estado desconhecido\`, não spinner eterno. A interface nunca altera a semântica Test/Plan/Apply/Verify nem mascara falhas.
+
+### Renderização no terminal, título e logs
+
+- O renderizador (TUI PowerShell atual ou Rust/Ratatui futuro) processa eventos estruturados \`runId/taskId/stepId/commandId\`; **não** observa \`kill -0\`/stdout como única fonte de verdade e **não** executa strings arbitrárias via \`eval\`, \`bash -c\` ou \`Invoke-Expression\`.
+- Atualizar só as linhas afetadas a cada tick (80–100 ms) e não emitir uma linha nova por frame; não interromper leitura de stdout/stderr, input ou cancelamento. A renderização pode desacelerar em terminais lentos; a execução jamais deve depender do FPS.
+- Suportar várias tarefas simultâneas sem colisão. Quando largura for insuficiente, truncar apenas a descrição visual e manter ícone/estado/timer; caminho e comando completos e **sanitizados** permanecem nos detalhes. Redimensionamentos e saída intensa não podem apagar prompts nem quebrar painel.
+- Durante a execução, se houver suporte detectado e o DS1 controlar a sessão, refletir a tarefa ativa no **título da aba/janela**, por exemplo \`⠋ DS1 — Migração users (4s)\`; o comportamento pode ser desativado e deve restaurar o título anterior em sucesso/erro/Ctrl+C/exceção. A atualização de título não é garantia em todo Windows Terminal/Console Host; no Windows, usar somente mecanismo compatível e nunca injetar OSC quando saída estiver redirecionada. O spinner inline independe do título.
+- PowerShell 5.1 no bootstrap e terminais sem Braille usam spinner ASCII (\`| / - \`), ou estado textual estático se cursor/host não permitir animação. \`DS1_NO_SPINNER=1\`, sem TTY, leitor de tela ou movimento reduzido desativam animação (sem desativar diagnósticos). \`NO_COLOR\` desativa apenas as cores.
+- **Logs persistidos** (\`events.jsonl\`, stdout/stderr, export, transcript) contêm somente transições, tempos, resultados e saída real do processo com segredos redigidos. Frames, retornos de carro usados para redesenhar, códigos ANSI/OSC e títulos de janela não pertencem ao log. Quando \`Start-Transcript\` ou host não permitir separar renderização e transcript com segurança, usar o modo textual estático.
+- Usar \`[s/N]\` somente como exemplo de interação em português: a opção negativa é padrão para ações mutáveis; não pedir/registrar senhas na TUI.
+
+**Matriz mínima de aceite:** comando silencioso ≥5 s, tempo crescente e ≥2 quadros distintos; atualização a cada 80–100 ms em host apropriado sem travar a UI; sucesso com verificação, exit 0 mas verificação negativa, falha de spawn, exit 1, timeout, cancelamento, UAC/entrada pendente, dois ou mais comandos concorrentes, resize 80×24/120×32, Windows Terminal/Console Host, sem TTY, \`NO_COLOR\`, \`DS1_NO_SPINNER=1\`, Unicode indisponível, logs sem frames/segredos e restauração de título. Referências: [002](../specs/002-safe-executor-contract/spec.md), [008](../specs/008-yaml-v2-runner/spec.md), [009](../specs/009-rust-tui-release/spec.md).
+
 
 ![Console durante a execução](assets/tui-execucao.svg)
 
