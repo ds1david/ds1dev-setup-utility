@@ -1,0 +1,32 @@
+name: Spec artifacts
+on:
+  push:
+    paths:
+      - 'AGENTS.md'
+      - '.specify/**'
+      - 'specs/**'
+      - 'docs/phase-gates.md'
+      - 'docs/codex-speckit.md'
+      - 'docs/notion-runbook-traceability.md'
+      - 'tools/check_specs.py'
+      - '.github/workflows/spec-artifacts.yml'
+  pull_request:
+    paths:
+      - 'AGENTS.md'
+      - '.specify/**'
+      - 'specs/**'
+      - 'docs/phase-gates.md'
+      - 'docs/codex-speckit.md'
+      - 'docs/notion-runbook-traceability.md'
+      - 'tools/check_specs.py'
+      - '.github/workflows/spec-artifacts.yml'
+jobs:
+  spec-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Structural check (does not imply implementation passed)
+        run: python tools/check_specs.py
