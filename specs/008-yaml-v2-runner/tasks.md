@@ -4,15 +4,15 @@
 
 ## Preparar e testar
 - [ ] T001 Inventariar implementações existentes, casos de uso e gaps para FR-008.
-- [ ] T002 [P] Desenhar contratos e regras de segurança, com teste primeiro.
-- [ ] T003 [P] Implementar fixtures e testes negativos sem efeitos colaterais.
+- [ ] T002 [P] Desenhar contratos e regras de segurança, com teste primeiro; definir correlação, ordenação e transições dos eventos `command.*`.
+- [ ] T003 [P] Implementar fixtures e testes negativos sem efeitos colaterais; incluir subprocesso silencioso, saída intercalada, concorrência, timeout, crash e erro de spawn.
 
 ## Entregar incremento utilizável
-- [ ] T004 Implementar fluxo mínimo para entregar: Oferece v2 opt-in validado para steps Windows/Ubuntu/MSYS2 com execução por interpretador, deixando PSD1 v1 funcionando.
+- [ ] T004 Implementar fluxo mínimo para entregar: Oferece v2 opt-in validado para steps Windows/Ubuntu/MSYS2 com execução por interpretador, deixando PSD1 v1 funcionando; publicar eventos de vida de comando sem misturá-los a stdout/stderr e sem renderizar spinner pelo runner.
 - [ ] T005 Repetir Apply×2 em ambiente descartável e validar invariantes de compatibilidade.
 
 ## Comprovar conclusão
-- [ ] T006 Executar AC-008-01 até AC-008-05 e registrar resultados redigidos.
+- [ ] T006 Executar AC-008-01 até AC-008-06 e registrar resultados redigidos, inclusive ausência de eventos `running` órfãos e captura de eventos durante ausência de stdout.
 - [ ] T007 Atualizar documentação de runbooks e trilha Notion ↔ Git ↔ testes.
 - [ ] T008 Revisar segurança, logs, rollback, CI e PR da fase antes de avançar.
 
