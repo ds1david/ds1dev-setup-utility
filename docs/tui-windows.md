@@ -22,22 +22,22 @@ As três capturas enviadas pelo usuário foram inspecionadas: Linutil em Ubuntu-
 
 | Token DS1 | Valor preferencial | Aplicação |
 |---|---|---|
-| \`background\` | \`#282C34\` | Fundo escuro de referência, adaptável ao tema do terminal |
-| \`panel.border\` | \`#4B5263\` | Bordas discretas \`Rounded\` quando Unicode e largura permitirem |
-| \`focus.cursor\` | \`#C678DD\` | \`❯\` magenta/violeta, seleção **de foco**, independente do checkbox |
-| \`focus.alternate\` | \`#D19A66\` | Variante **âmbar**, não magenta/ciano; nunca confundir com cor de sucesso |
-| \`selection.checked\` | \`#56B6C2\` | \`[x]\` ciano: incluído no **plano pretendido**, não instalado |
-| \`selection.checkedVerified\` | \`#98C379\` | Verde apenas para estado realmente verificado; não usar verde de sucesso para uma mera seleção |
-| \`execution.spinner\` | \`#61AFEF\` | Ciano-azulado do tema Modern Terminal; pode compartilhar estilo do spinner anterior \`#00A3FF\` como **variante** |
-| \`approval.prompt\` | \`#E5C07B\` | \`?\` e avisos exigindo aprovação/entrada |
-| \`text.primary\` | \`#ABB2BF\` | Títulos, comandos sanitizados e descrições legíveis |
-| \`text.muted\` | \`#5C6370\` | Dicas secundárias, nunca texto crítico/erros sem contraste suficiente |
-| \`result.success\` / \`result.failure\` | \`#98C379\` / \`#E06C75\` | \`✔\` sucesso somente após Verify; \`✖\` falha com causa explícita |
-| \`focus.background\` | \`#343A45\` | Fundo discreto na linha sob cursor, sem ocultar estado ou checkbox |
+| `background` | `#282C34` | Fundo escuro de referência, adaptável ao tema do terminal |
+| `panel.border` | `#4B5263` | Bordas discretas `Rounded` quando Unicode e largura permitirem |
+| `focus.cursor` | `#C678DD` | `❯` magenta/violeta, seleção **de foco**, independente do checkbox |
+| `focus.alternate` | `#D19A66` | Variante **âmbar**, não magenta/ciano; nunca confundir com cor de sucesso |
+| `selection.checked` | `#56B6C2` | `[x]` ciano: incluído no **plano pretendido**, não instalado |
+| `selection.checkedVerified` | `#98C379` | Verde apenas para estado realmente verificado; não usar verde de sucesso para uma mera seleção |
+| `execution.spinner` | `#61AFEF` | Ciano-azulado do tema Modern Terminal; pode compartilhar estilo do spinner anterior `#00A3FF` como **variante** |
+| `approval.prompt` | `#E5C07B` | `?` e avisos exigindo aprovação/entrada |
+| `text.primary` | `#ABB2BF` | Títulos, comandos sanitizados e descrições legíveis |
+| `text.muted` | `#5C6370` | Dicas secundárias, nunca texto crítico/erros sem contraste suficiente |
+| `result.success` / `result.failure` | `#98C379` / `#E06C75` | `✔` sucesso somente após Verify; `✖` falha com causa explícita |
+| `focus.background` | `#343A45` | Fundo discreto na linha sob cursor, sem ocultar estado ou checkbox |
 
-**Acessibilidade e compatibilidade:** os valores são preferências de tema, não requisitos de truecolor. Validar contraste do texto cinza (especialmente \`#5C6370\` em fundo \`#282C34\`; subir luminância quando necessário); suporte a ANSI 16/256 cores e \`NO_COLOR\`. Bordas \`Rounded\` (Unicode) degradam para box simples ASCII/Unicode; indicadores \`❯\`, \`✔\`, \`✖\`, Braille e checkboxes têm alternativas \`>\`, \`[OK]\`, \`[FAIL]\`, \`[RUNNING]\`. Não depender de Nerd Fonts, ícones de múltiplas células ou frames ANSI no log. Emojis não são necessários. Preservar nomes de tokens/estados ao trocar de backend.
+**Acessibilidade e compatibilidade:** os valores são preferências de tema, não requisitos de truecolor. Validar contraste do texto cinza (especialmente `#5C6370` em fundo `#282C34`; subir luminância quando necessário); suporte a ANSI 16/256 cores e `NO_COLOR`. Bordas `Rounded` (Unicode) degradam para box simples ASCII/Unicode; indicadores `❯`, `✔`, `✖`, Braille e checkboxes têm alternativas `>`, `[OK]`, `[FAIL]`, `[RUNNING]`. Não depender de Nerd Fonts, ícones de múltiplas células ou frames ANSI no log. Emojis não são necessários. Preservar nomes de tokens/estados ao trocar de backend.
 
-**Decisão de compatibilidade com o spinner anterior:** \`#61AFEF\` é o padrão para o tema *Modern Terminal*, \`#00A3FF\` é uma variante de destaque do design anterior, e ANSI ciano é fallback. Ambos significam atividade, não sucesso; o mesmo evento de execução governa todos. Tick nominal de 80–100 ms permanece, sem reescrever logs por frame.
+**Decisão de compatibilidade com o spinner anterior:** `#61AFEF` é o padrão para o tema *Modern Terminal*, `#00A3FF` é uma variante de destaque do design anterior, e ANSI ciano é fallback. Ambos significam atividade, não sucesso; o mesmo evento de execução governa todos. Tick nominal de 80–100 ms permanece, sem reescrever logs por frame.
 
 ### Duas vistas, uma única identidade
 
@@ -47,9 +47,9 @@ As três capturas enviadas pelo usuário foram inspecionadas: Linutil em Ubuntu-
 
 ### Wireframe semântico da vista de runbook
 
-O exemplo é uma **fixture visual não executável**; a aparência não certifica que comandos foram executados ou que o runbook \`Deploy Staging\` existe no projeto:
+O exemplo é uma **fixture visual não executável**; a aparência não certifica que comandos foram executados ou que o runbook `Deploy Staging` existe no projeto:
 
-\`\`\`text
+```text
 ╭─ DS1 / Runbook: Deploy Staging ─────┬─ Detalhes e logs ao vivo ───────────────────────────╮
 │ ❯ [x] ✔ 1. Validar pré-requisitos  │ [10:15:00] INFO Checagem do ambiente concluída     │
 │   [x] ⠋ 2. Instalar dependências   │ [10:15:01] RUN  uv pip install ...                 │
@@ -60,45 +60,45 @@ O exemplo é uma **fixture visual não executável**; a aparência não certific
 │ ? Passo 4 exige autorização. Rever escopo e confirmar? [s/N]                             │
 │ [↑↓/jk] Navegar  [Espaço] Marcar  [a] Todos elegíveis  [p] Plano  [Enter] Detalhes        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────╯
-\`\`\`
+```
 
-**Distinção crítica:** \`❯\` representa **foco/cursor**, \`[x]\` representa **seleção no lote**, e \`✔/⠋/?/○/✖\` representa **estado de execução observado**, três eixos independentes. O usuário pode selecionar tarefa já conforme (o plano a mostra como NoOp), ou ver uma tarefa executando que já estava selecionada antes. A tela nunca usa \`[x]\` como prova de instalação. Durante uma execução, seleção é congelada para o plano fixado; para uma nova tentativa, voltar ao planejamento e revalidar.
+**Distinção crítica:** `❯` representa **foco/cursor**, `[x]` representa **seleção no lote**, e `✔/⠋/?/○/✖` representa **estado de execução observado**, três eixos independentes. O usuário pode selecionar tarefa já conforme (o plano a mostra como NoOp), ou ver uma tarefa executando que já estava selecionada antes. A tela nunca usa `[x]` como prova de instalação. Durante uma execução, seleção é congelada para o plano fixado; para uma nova tentativa, voltar ao planejamento e revalidar.
 
 ### Contrato de layout, foco e estados
 
 | Região | Critério |
 |---|---|
-| Cabeçalho | Nome do runbook, target real, etapa/total, status global e contagem \`Selecionados N / Elegíveis M / Bloqueados B\` |
-| Lista de passos (40%) | \`❯\` cursor, \`[x]/[ ]\` seleção e ícone de estado separados; título, número, dependências, bloqueios e status acessíveis; rolagem virtual em listas extensas |
+| Cabeçalho | Nome do runbook, target real, etapa/total, status global e contagem `Selecionados N / Elegíveis M / Bloqueados B` |
+| Lista de passos (40%) | `❯` cursor, `[x]/[ ]` seleção e ícone de estado separados; título, número, dependências, bloqueios e status acessíveis; rolagem virtual em listas extensas |
 | Detalhes e logs (60%) | Mostra descrição da etapa focada, pré/pós-condições, comando **sanitizado**, versão, target, risco/permissão, stdout/stderr, spinner/timer por comando, saída persistida/posição de scroll |
 | Barra inferior | Prompts que exigem ação, autorização explícita, progresso agregado, erros relevantes e atalhos do contexto; prompt não pode ser encoberto por logs nem frames de spinner |
-| Modal de revisão | Plano congelado, delta observado, dependências, escopo do batch, privilégios e operação potencialmente destrutiva, com \`Cancelar\` preselecionado |
+| Modal de revisão | Plano congelado, delta observado, dependências, escopo do batch, privilégios e operação potencialmente destrutiva, com `Cancelar` preselecionado |
 | Responsividade | Em largura ≥120 e altura ≥32, 40/60 mais barra; 80×24 a 119×31 usa lista e detalhes alternáveis por Tab; abaixo de 80×24 ou sem TTY, CLI linear sem bordas/animação |
 
-Os logs continuam visíveis durante a execução e oferecem \`PageUp/PageDown\`, \`End\` para voltar a acompanhar a saída, filtros INFO/WARN/ERROR (somente apresentação) e \`L\` para abrir/exportar detalhes; scroll manual desliga auto-follow até \`End\`. A UI nunca trunca os arquivos persistidos por causa do limite de memória da TUI. Resize, caracteres combinantes, linhas longas e stdout sem newline não devem quebrar input, spinner ou bordas.
+Os logs continuam visíveis durante a execução e oferecem `PageUp/PageDown`, `End` para voltar a acompanhar a saída, filtros INFO/WARN/ERROR (somente apresentação) e `L` para abrir/exportar detalhes; scroll manual desliga auto-follow até `End`. A UI nunca trunca os arquivos persistidos por causa do limite de memória da TUI. Resize, caracteres combinantes, linhas longas e stdout sem newline não devem quebrar input, spinner ou bordas.
 
 ### Navegação e permissões (estado, foco e confirmação)
 
 | Tecla / contexto | Comportamento |
 |---|---|
-| \`↑/↓\`, \`j/k\` com **foco na lista** | Mover o cursor sem marcar/desmarcar nem disparar comandos; \`j/k\` não são atalhos durante edição de texto ou modal |
-| \`Espaço\` com foco na lista | Marcar/desmarcar a etapa elegível; atualizar apenas a intenção de plano, não executar |
-| \`a\` com foco na lista | Marcar todos os **elegíveis do escopo/filtro atual**; nova pressão pode desmarcar esses itens. Excluir bloqueados, passos não implementados e irrelevantes; jamais ocultar dependência |
-| \`Enter\` sobre categoria/runbook/passo | Abrir subgrupo/detalhes ou **revisão do plano** quando já estiver na ação explícita \`Revisar execução\`; **nunca** executar Apply diretamente |
-| \`p\` / \`P\` | Gerar/exibir plano sem efeitos colaterais; revisar dependências, permissões, versões e NoOp |
-| \`A\` / botão textual \`Aplicar\` | Abrir confirmação contextual do plano fixado. Somente uma confirmação posterior pode iniciar Apply; padrão \`Não/Cancelar\`, com privilégio mínimo |
-| \`Tab/Shift+Tab\` | Alternar foco entre lista, painel de logs, busca/prompt e ações disponíveis |
-| \`L\` | Expandir/alternar painel de logs e sessão; \`PageUp/PageDown/End\` controlam scroll/follow |
-| \`/\` | Entrar na busca; ao digitar, \`a\`, \`j\`, \`k\`, \`p\` e \`Enter\` pertencem ao campo e não disparam ações globais |
-| \`Esc\`, \`q\` | Voltar/cancelar modal; durante execução, abrir fluxo de cancelamento seguro (não encerrar processo à força) |
-| \`R\` | Atualizar catálogo **somente ocioso**; em batch em andamento, bloquear alteração de definição/seleção |
-| \`F1\` / \`?\` fora de prompt | Ajuda/atalhos contextualizados; se \`?\` estiver em campo de confirmação, recebe apenas a semântica local |
+| `↑/↓`, `j/k` com **foco na lista** | Mover o cursor sem marcar/desmarcar nem disparar comandos; `j/k` não são atalhos durante edição de texto ou modal |
+| `Espaço` com foco na lista | Marcar/desmarcar a etapa elegível; atualizar apenas a intenção de plano, não executar |
+| `a` com foco na lista | Marcar todos os **elegíveis do escopo/filtro atual**; nova pressão pode desmarcar esses itens. Excluir bloqueados, passos não implementados e irrelevantes; jamais ocultar dependência |
+| `Enter` sobre categoria/runbook/passo | Abrir subgrupo/detalhes ou **revisão do plano** quando já estiver na ação explícita `Revisar execução`; **nunca** executar Apply diretamente |
+| `p` / `P` | Gerar/exibir plano sem efeitos colaterais; revisar dependências, permissões, versões e NoOp |
+| `A` / botão textual `Aplicar` | Abrir confirmação contextual do plano fixado. Somente uma confirmação posterior pode iniciar Apply; padrão `Não/Cancelar`, com privilégio mínimo |
+| `Tab/Shift+Tab` | Alternar foco entre lista, painel de logs, busca/prompt e ações disponíveis |
+| `L` | Expandir/alternar painel de logs e sessão; `PageUp/PageDown/End` controlam scroll/follow |
+| `/` | Entrar na busca; ao digitar, `a`, `j`, `k`, `p` e `Enter` pertencem ao campo e não disparam ações globais |
+| `Esc`, `q` | Voltar/cancelar modal; durante execução, abrir fluxo de cancelamento seguro (não encerrar processo à força) |
+| `R` | Atualizar catálogo **somente ocioso**; em batch em andamento, bloquear alteração de definição/seleção |
+| `F1` / `?` fora de prompt | Ajuda/atalhos contextualizados; se `?` estiver em campo de confirmação, recebe apenas a semântica local |
 
-A seleção é conjunto estável de IDs de passos/runbooks, independente do índice de tela; mudança de busca, reordenação e scroll **não** altera quais itens estavam selecionados. O \`a\` opera apenas no escopo explícito exibido e deve informar seu alcance (\`5 elegíveis neste filtro\`) antes de revisão. Para listas hierárquicas, o plano resolve dependências e as apresenta explicitamente; não supor seleção automática de dependentes nem executar pré-requisito silenciosamente. Uma tarefa bloqueada pode ser inspecionada, mas sua confirmação fica desabilitada com motivo. Itens já executando não podem ter seleção alterada até término. O motor preserva Test/Plan/Apply/Verify e valida novamente estado antes de aplicar.
+A seleção é conjunto estável de IDs de passos/runbooks, independente do índice de tela; mudança de busca, reordenação e scroll **não** altera quais itens estavam selecionados. O `a` opera apenas no escopo explícito exibido e deve informar seu alcance (`5 elegíveis neste filtro`) antes de revisão. Para listas hierárquicas, o plano resolve dependências e as apresenta explicitamente; não supor seleção automática de dependentes nem executar pré-requisito silenciosamente. Uma tarefa bloqueada pode ser inspecionada, mas sua confirmação fica desabilitada com motivo. Itens já executando não podem ter seleção alterada até término. O motor preserva Test/Plan/Apply/Verify e valida novamente estado antes de aplicar.
 
 ### Implementação incremental e limites do exemplo em Rust
 
-O trecho Ratatui fornecido pelo usuário é **referência de renderização**, não código pronto para produção: seu \`RunbookStep { selected, status }\` não modela bloqueio, erro, verificação, cancelamento, dependências, identidade de comando nem operação assíncrona. Em produção separar \`UiFocus\`, \`SelectionSet\`, \`ObservedStepStatus\`, \`ExecutionState\` e \`PromptState\`; receber snapshots/eventos do runner, não executar subprocessos dentro de \`draw_ui\`. \`StepStatus::Running(frame)\` deve ser derivado do estado da operação + tick do renderer, nunca usado como evidência de processo vivo. \`Ratatui ListState\` conserva cursor; \`[x]\` vem do conjunto de seleções; estado/cores vêm do domínio. Renderização é função pura do estado e do frame, sem mutação do host.
+O trecho Ratatui fornecido pelo usuário é **referência de renderização**, não código pronto para produção: seu `RunbookStep { selected, status }` não modela bloqueio, erro, verificação, cancelamento, dependências, identidade de comando nem operação assíncrona. Em produção separar `UiFocus`, `SelectionSet`, `ObservedStepStatus`, `ExecutionState` e `PromptState`; receber snapshots/eventos do runner, não executar subprocessos dentro de `draw_ui`. `StepStatus::Running(frame)` deve ser derivado do estado da operação + tick do renderer, nunca usado como evidência de processo vivo. `Ratatui ListState` conserva cursor; `[x]` vem do conjunto de seleções; estado/cores vêm do domínio. Renderização é função pura do estado e do frame, sem mutação do host.
 
 O bootstrap PowerShell 5.1 permanece mínimo e sem dependências extras. A interface provisória PowerShell 7 pode adotar seleção, rodapé e tokens compatíveis conforme fase 002; não declarar paridade com a futura TUI Rust antes de testes reais. Testar por fixture sem operações de instalação e validar terminal Console Host, Windows Terminal, cores 16/256/truecolor e fallback sem Unicode.
 
@@ -158,20 +158,20 @@ UAC não é instalável. Não substituir o diálogo seguro do Windows por uma im
 
 | Tecla e foco | Ação planejada |
 |---|---|
-| \`↑/↓\`, \`j/k\` quando a lista tem foco | Navegar sem executar ou marcar |
-| \`Tab/Shift+Tab\` | Alternar entre lista, detalhes/logs, busca e prompt |
-| \`Espaço\` na lista | Marcar/desmarcar passo elegível, sem Apply |
-| \`a\` na lista | Selecionar/desmarcar elegíveis **do filtro atual**, excluindo bloqueados |
-| \`Enter\` | Abrir detalhe/subgrupo ou avançar em diálogo contextual; **não** executar a partir da lista |
-| \`/\` | Buscar título, ID ou ferramenta |
-| \`V\` | Verificar estado real |
-| \`P/p\` | Mostrar plano imutável do lote/steps |
-| \`A\` | Abrir revisão de Apply + confirmação separada, padrão Cancelar |
-| \`E\` | Escolher versão/parâmetros da tarefa focada |
-| \`L\`, \`PageUp/PageDown/End\` | Abrir e navegar logs, pausar/retomar auto-follow |
-| \`R\` | Recarregar catálogo local apenas quando ocioso |
-| \`F1\`, \`?\` fora do prompt | Ajuda contextual |
-| \`Esc/Q\` | Voltar/sair quando ocioso; durante Apply pedir cancelamento seguro |
+| `↑/↓`, `j/k` quando a lista tem foco | Navegar sem executar ou marcar |
+| `Tab/Shift+Tab` | Alternar entre lista, detalhes/logs, busca e prompt |
+| `Espaço` na lista | Marcar/desmarcar passo elegível, sem Apply |
+| `a` na lista | Selecionar/desmarcar elegíveis **do filtro atual**, excluindo bloqueados |
+| `Enter` | Abrir detalhe/subgrupo ou avançar em diálogo contextual; **não** executar a partir da lista |
+| `/` | Buscar título, ID ou ferramenta |
+| `V` | Verificar estado real |
+| `P/p` | Mostrar plano imutável do lote/steps |
+| `A` | Abrir revisão de Apply + confirmação separada, padrão Cancelar |
+| `E` | Escolher versão/parâmetros da tarefa focada |
+| `L`, `PageUp/PageDown/End` | Abrir e navegar logs, pausar/retomar auto-follow |
+| `R` | Recarregar catálogo local apenas quando ocioso |
+| `F1`, `?` fora do prompt | Ajuda contextual |
+| `Esc/Q` | Voltar/sair quando ocioso; durante Apply pedir cancelamento seguro |
 
 No bootstrap, só disponibilizar as teclas pertinentes às suas etapas fixas. Mouse é opcional; todas as ações devem funcionar pelo teclado. No campo de busca, letras são texto, não atalhos globais.
 
