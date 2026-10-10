@@ -19,6 +19,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 2. Separar parsing, binding de variáveis, policy engine e executor por interpretador.
 3. Testar com fixtures cross-platform e comandos inofensivos; promover feature flag por runbook.
 4. Criar migração piloto mantendo ID e mesmo resultado antes de habilitar restante do catálogo.
+5. Contratar eventos estruturados `command.started`, `command.waiting`, `command.resumed`, `command.finished` e `command.interrupted` com correlação por `runId/taskId/stepId/commandId`, idempotência de sequência, redaction de comando e reconciliador para interrupções. Frames e título do terminal permanecem responsabilidade das interfaces PowerShell/Rust.
 
 ## Artefatos existentes a avaliar
 - `docs/modelo-runbooks-v2.md`
@@ -29,6 +30,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 
 ## Contratos e estrutura a produzir
 - Fluxo de entrada, estados, erro e pós-condições explícitos por runbook/adaptador.
+- Teste de contrato para comando silencioso ≥5 s com emissão de início/fim sem chunks, múltiplos processos concorrentes, fechamento ordenado e detecção de spawn inválido sem `started` fictício.
 - Testes unitários do contrato, testes de integração em VM e documentação com fontes Notion.
 - Gate com evidência dos AC-008; sem alterações de IDs existentes e sem confundir feature flag com implementação.
 
@@ -38,6 +40,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 - `python tools/check_specs.py`
 - Ensaiar dois Apply na VM quando houver ação mutável; comparar diffs.
 - Testar confirmação negada, dependência indisponível, falha parcial e logs sem segredo.
+- Verificar que os eventos estruturados são suficientes para o spinner da UI funcionar sem stdout, não persistem quadros de animação e não deixam execuções incompletas como `running` após reinício.
 
 ## Rollback e implantação
 Feature flag v2 reversível, PSD1 mantém execução como fallback; não migrar catálogos em massa antes da paridade.
