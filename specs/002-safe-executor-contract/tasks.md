@@ -4,15 +4,15 @@
 
 ## Gate A — Contrato e testes de segurança
 - [ ] T001 [P] Inspecionar baseline nos arquivos Git envolvidos: src/ds1-setup.ps1, src/Runbooks.psm1, src/Preflight.psm1; registrar lacunas contra AC-002.
-- [ ] T002 [P] Criar ou ajustar mocks para caminhos negativos e para Test/Plan sem efeitos.
-- [ ] T003 Definir contrato de entrada/saída, estado observável, pré-condições, privilégio e mecanismo de falha da fase.
+- [ ] T002 [P] Criar ou ajustar mocks para caminhos negativos e para Test/Plan sem efeitos; cobrir ação silenciosa de longa duração, falha, espera e cancelamento do indicador `running`.
+- [ ] T003 Definir contrato de entrada/saída, estado observável, pré-condições, privilégio e mecanismo de falha da fase; incluir identidade de comando e eventos de início/fim confiáveis.
 
 ## Gate B — Fatia funcional
-- [ ] T004 Implementar o menor percurso feliz que entregue: Executar -List, -Task X -Plan e -Validate em contexto sem administrador e com resultado consistente, preservando runbooks PSD1.
+- [ ] T004 Implementar o menor percurso feliz que entregue: Executar -List, -Task X -Plan e -Validate em contexto sem administrador e com resultado consistente, preservando runbooks PSD1; instrumentar ação existente e renderizar spinner inline na TUI PowerShell, sem contaminar logs nem mudar semântica do handler.
 - [ ] T005 Testar idempotência (Apply×2 quando aplicável), conflito de estado preexistente e falha parcial.
 
 ## Gate C — Verificação e entrega
-- [ ] T006 Validar cenários específicos AC-002-01 a AC-002-05 e anexar evidências de ambiente real/CI.
+- [ ] T006 Validar cenários específicos AC-002-01 a AC-002-07, incluindo animação durante silêncio de saída e desligamento em estados terminais, e anexar evidências de ambiente real/CI.
 - [ ] T007 Atualizar documentação local e rastreabilidade com o que está de fato implementado, sem marcar itens pendentes como prontos.
 - [ ] T008 Rodar suíte de regressão do projeto e revisar diffs, logs e exposição de segredos antes do PR.
 
