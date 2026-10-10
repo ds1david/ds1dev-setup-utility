@@ -23,6 +23,9 @@ Marcadores como distro/paths devem ser substituídos pelo valor **observado**, n
 3. **AC-009-03:** Confirmação recusada cancela seleção inteira ou ação indicada sem Apply oculto. Capturar versões, saída, código de retorno e estado após execução.
 4. **AC-009-04:** Erros de subprocesso, pending reboot e logs continuam visíveis na interface e exportáveis de forma redigida. Capturar versões, saída, código de retorno e estado após execução.
 5. **AC-009-05:** Pacote release inclui checksums e processo de verificação documentado; teste de instalação a partir de Windows limpo registra evidências. Capturar versões, saída, código de retorno e estado após execução.
+6. **AC-009-06:** Rodar fixture inofensiva que dorme por pelo menos 5 segundos sem produzir saída; registrar frames distintos, tempo decorrido, comando sanitizado e troca por status final até o primeiro refresh. Repetir com falha exit code 1, timeout, Ctrl+C, erro de spawn e sucesso de processo com pós-condição falsa.
+7. **AC-009-07:** Rodar em Windows Terminal e Console Host, janelas 80×24 e 120×32; repetir com `DS1_NO_SPINNER=1`, stdout redirecionado e fallback ASCII. Verificar que logs não contêm frames/OSC e que o título original é restaurado quando o recurso estiver ligado.
+8. **AC-009-08:** Simular três comandos concorrentes e eventos duplicados/atrasados. Verificar spinner e duração por comando; finalizar em ordem distinta e comprovar que nenhum indicador ativo fica órfão. Em prompt de confirmação, mostrar `Aguardando ação`, não animação enganosa.
 
 ## Resistência a falhas
 - Dependência ausente: erro claro, não auto-instalação.
@@ -30,6 +33,7 @@ Marcadores como distro/paths devem ser substituídos pelo valor **observado**, n
 - Exit code diferente de zero, timeout e dados inválidos: falha sem success falso.
 - Segundo Apply: ausência de mudança redundante.
 - Logs exportados: sem segredos, com RunId e status real.
+- Spinner ativo no silêncio não é prova de progresso: confirmar estado do processo e pós-verificação. Se a UI perder vínculo, mostrar `Interrompido/Estado desconhecido` em vez de animação infinita.
 
 ## Resultado
 PASS somente para todos AC-009 comprovados; BLOCKED quando faltarem ferramentas/VM; FAIL para divergência de pós-condição, UAC indevido ou mutação inesperada. **Rollback:** Manter CLI/TUI PowerShell como fallback, nunca alterar manifests/runbooks por navegação da UI.
