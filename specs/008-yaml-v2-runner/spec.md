@@ -23,6 +23,7 @@ O código preexistente e a wiki são materiais distintos. A fase 008 não valida
 - **FR-008-06:** Manter compatibilidade PSD1 v1, desabilitar YAML novo por default durante piloto e fornecer migração incremental com fixture real.
 - **FR-008-07:** Emitir eventos estruturados `command.started`/`command.finished` por execução de step, correlacionados por `runId/taskId/stepId/commandId`, incluindo comando de exibição redigido, instante inicial/final, duração, exit code e causa terminal (erro, timeout, cancelamento, reboot ou interrupção). `command.started` somente depois do spawn confirmado; processo que falhar no spawn recebe evento terminal `start_failed`, sem aparentar execução ativa. Eventos devem ser consistentes com os logs e com o estado observado.
 - **FR-008-08:** A UI consome os eventos para manter `running` mesmo sem saída; o motor não emite frames de spinner em stdout/stderr e não usa ausência de saída como detecção de progresso. Em queda da UI/reinício, reconciliar ações em aberto com o estado do processo ou classificá-las como `Interrupted`, nunca mantê-las indefinidamente como ativas. Suportar múltiplos comandos concorrentes e estados de espera/interação explicitamente.
+- **FR-008-09:** Garantir transições distinguíveis `awaiting_approval` → `running` → `verifying` → `succeeded/failed`, incluindo `waiting_input`, `cancelled`, `timed_out`, `interrupted` e `reboot_required` conforme o caso. Registrar instantes e duração efetiva sem qualquer exigência de estilo/cores no runner; spinner a cada 80–100 ms, cores e título de terminal são exclusivos do renderizador, conforme `docs/tui-windows.md`. Nunca usar `eval` ou string interpolada pelo shell apenas para permitir animação.
 
 ## Critérios de aceite
 - **AC-008-01:** Fixtures v2 válidas/invalidas cobrem schema, target, interpretação de versões, AST e dependências.
@@ -31,6 +32,7 @@ O código preexistente e a wiki são materiais distintos. A fase 008 não valida
 - **AC-008-04:** Timeout e falha em passo N interrompem dependentes e preservam stdout/stderr redigidos e códigos.
 - **AC-008-05:** Uma tarefa de exemplo executa Test→Plan→Apply→Verify com adaptador real em VM para Windows, Ubuntu e MSYS2.
 - **AC-008-06:** Fixtures simulam processo silencioso de longa duração, comandos concorrentes, spawn recusado, saída intercalada, timeout, cancelamento e crash; o journal contém pares de início/término correlacionáveis ou interrupção recuperada, sem frames ANSI/spinner nos logs. A UI recebe estado suficiente para animar sem inferir a partir de stdout.
+- **AC-008-07:** O stream distingue consentimento pendente, início confirmado, processo finalizado com verificação pendente, pós-verificação bem-sucedida e negativa; comandos em silêncio continuam identificáveis, duração final é determinística, sem wrappers `eval`/`bash -c` nem frames gravados como eventos de progresso.
 
 ## Não escopo
 Rust TUI, download de catálogo pela internet, execução remota e descontinuação imediata do PSD1.
