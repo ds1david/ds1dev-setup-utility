@@ -21,13 +21,14 @@ Executar -List, -Task X -Plan e -Validate em contexto sem administrador e com re
 2. Manter parser Import-PowerShellDataFile v1; criar abstrações para capabilities, privilégio, protocolo de resultado e logs.
 3. Introduzir testes de contrato e mocks para side effects, caminhos, código de saída e dependências.
 4. Unificar documentação com runbooks PSD1 existentes; o modelo YAML v2 permanece proposta.
+5. Introduzir a representação de ciclo de vida de cada comando/ação instrumentado (`runId/taskId/stepId/commandId`, início/fim/status), e um renderer provisório PowerShell que atualiza spinner inline somente enquanto a ação está ativa, sem modificar mensagens persistidas, sem exigir TUI Rust e sem tentar inspecionar comandos internos de blocos opacos.
 
 ## Caminhos existentes afetados
 - `src/ds1-setup.ps1`
 - `src/Runbooks.psm1`
 - `src/Preflight.psm1`
 - `src/TaskPhases.psm1`
-- `src/Tui.psm1`
+- `src/Tui.psm1` (renderização de indicador `running` com fallback texto/ASCII e terminal não interativo)
 - `runbooks/**/runbook.psd1`
 - `tests/runbooks.tests.ps1`
 - `tests/task-phases.tests.ps1`
@@ -44,6 +45,7 @@ Executar -List, -Task X -Plan e -Validate em contexto sem administrador e com re
 - `pwsh -NoProfile -File tests/task-phases.tests.ps1`
 - `python tools/check_specs.py` verifica somente a estrutura documental.
 - Testes unitários em CI; testes reais em VM Windows/WSL/MSYS2 apropriada, com registro de estado anterior e posterior.
+- Fixture PowerShell silenciosa por 5 segundos: início → spinner e tempo decorrido → resultado terminal, inclusive em falha, Ctrl+C/timeout e erro ao iniciar. Conferir ausência de frames ANSI e sequências OSC em export de logs e saída redirecionada.
 
 ## Recuperação/rollback
 Backout de novo dispatcher mantendo contrato v1; logs antigos continuam legíveis.
