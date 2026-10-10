@@ -21,6 +21,8 @@ O código preexistente e a wiki são materiais distintos. A fase 008 não valida
 - **FR-008-04:** Receber streams stdout/stderr separados, código de saída, duração, cancelamento, timeout, pending reboot e log JSONL com redaction.
 - **FR-008-05:** Rejeitar traversal, cwd fora do permitido, binário não confiável, shell injection, dependência circular e segredo em config/log.
 - **FR-008-06:** Manter compatibilidade PSD1 v1, desabilitar YAML novo por default durante piloto e fornecer migração incremental com fixture real.
+- **FR-008-07:** Emitir eventos estruturados `command.started`/`command.finished` por execução de step, correlacionados por `runId/taskId/stepId/commandId`, incluindo comando de exibição redigido, instante inicial/final, duração, exit code e causa terminal (erro, timeout, cancelamento, reboot ou interrupção). `command.started` somente depois do spawn confirmado; processo que falhar no spawn recebe evento terminal `start_failed`, sem aparentar execução ativa. Eventos devem ser consistentes com os logs e com o estado observado.
+- **FR-008-08:** A UI consome os eventos para manter `running` mesmo sem saída; o motor não emite frames de spinner em stdout/stderr e não usa ausência de saída como detecção de progresso. Em queda da UI/reinício, reconciliar ações em aberto com o estado do processo ou classificá-las como `Interrupted`, nunca mantê-las indefinidamente como ativas. Suportar múltiplos comandos concorrentes e estados de espera/interação explicitamente.
 
 ## Critérios de aceite
 - **AC-008-01:** Fixtures v2 válidas/invalidas cobrem schema, target, interpretação de versões, AST e dependências.
@@ -28,6 +30,7 @@ O código preexistente e a wiki são materiais distintos. A fase 008 não valida
 - **AC-008-03:** Teste adversarial tenta shell injection, path traversal e interpolação de token: todos rejeitados sem side effects.
 - **AC-008-04:** Timeout e falha em passo N interrompem dependentes e preservam stdout/stderr redigidos e códigos.
 - **AC-008-05:** Uma tarefa de exemplo executa Test→Plan→Apply→Verify com adaptador real em VM para Windows, Ubuntu e MSYS2.
+- **AC-008-06:** Fixtures simulam processo silencioso de longa duração, comandos concorrentes, spawn recusado, saída intercalada, timeout, cancelamento e crash; o journal contém pares de início/término correlacionáveis ou interrupção recuperada, sem frames ANSI/spinner nos logs. A UI recebe estado suficiente para animar sem inferir a partir de stdout.
 
 ## Não escopo
 Rust TUI, download de catálogo pela internet, execução remota e descontinuação imediata do PSD1.
@@ -43,7 +46,7 @@ Rust TUI, download de catálogo pela internet, execução remota e descontinuaç
 - Notion: https://app.notion.com/p/3f4bf4c17f678106bcc8e235868647dc
 - Git: `docs/modelo-runbooks-v2.md`
 - Git: `docs/perfis-ambientes-versoes-v2.md`
-- Git: `docs/script-runner-v2.md`
+- Git: `docs/script-runner-v2.md` (protocolo de eventos para o indicador `running`)
 - Git: `src/Runbooks.psm1`
 - Git: `runbooks/**/runbook.psd1`
 - [Rastreabilidade](../../docs/notion-runbook-traceability.md)
