@@ -87,25 +87,34 @@ Exemplo de evento e resultado escritos pelo **coordenador** (valores fictícios)
 
 ## Ciclo de vida de comando para indicadores `running`
 
-**Contrato proposto; não implementado.** O coordenador publica eventos de transição **além dos chunks de stdout/stderr**. A TUI PowerShell atual e a Rust futura consomem o mesmo conceito de ciclo de vida, sem emitir frames de spinner no log ou dentro do processo filho.
+**Contrato proposto, ainda não implementado.** O runner **não desenha spinner** e não precisa de cores, ANSI, `eval`, `bash -c`, `kill -0` ou detecção de mudanças de stdout para produzir feedback visual. Ele publica fatos correlacionados; a TUI PowerShell/Rust usa esses fatos para atualizar a mesma linha, a 80–100 ms, com spinner ciano, descrição e duração, conforme [padrão visual](tui-windows.md#padrão-visual-de-execução--spinner-timer-e-transição-de-estados).
 
-| Evento | Origem real | Efeito no renderer |
+| Evento | Quando emitir | Estado renderizado |
 |---|---|---|
-| `command.started` | Spawn do processo/ação confirmado | Iniciar contador e spinner na linha do comando sanitizado |
-| `command.waiting` | Aguardando UAC, aprovação, credencial ou input que exige intervenção | Suspender animação; mostrar `Aguardando ação` e motivo seguro |
-| `command.resumed` | Aguardando ação resolvido e processo ativo | Retomar spinner se ainda houver execução |
-| `command.finished` | Processo encerrou e streams foram drenados | Desligar spinner; exibir exit code, duração e estado de verificação |
-| `command.interrupted` | Reconciliação após crash/quebra de canal sem status confiável | Desligar spinner e exibir `Interrompido/Estado desconhecido` |
+| `command.awaiting_approval` | Antes de qualquer ação mutável, aguardando confirmação | `? Executar ação? [s/N]`, **sem spinner** |
+| `command.started` | Spawn **confirmado** do processo ou entrada na ação instrumentada | `⠋ Executando <descrição>... (4s)`; timer e spinner ativos |
+| `command.waiting` | Processo aguarda UAC/input/intervenção humana | `? Aguardando ação...`; suspender animação |
+| `command.resumed` | Espera encerrada e execução retomada | Retomar animação do mesmo `commandId` |
+| `command.finished` | Processo encerrado e pipes drenados; guardar exit code/duração | Parar spinner; se sucesso de processo, mostrar `◌ Verificando resultado...` |
+| `command.verified` | Após checagem observável do estado desejado | `✔ Concluído! (5.2s)` se verificado; `✖ <erro real> (1.1s)` em falha |
+| `command.cancelled` / `command.timed_out` | Cancelamento confirmado ou timeout | Parar spinner e exibir estado terminal/diagnóstico |
+| `command.interrupted` | Crash/quebra de canal sem estado reconciliável | Parar spinner e exibir `Interrompido/Estado desconhecido` |
 
-O envelope do evento inclui `schema=ds1.runner.event/v1`, `eventType`, `runId`, `taskId`, `stepId`, `commandId`, `sequence`, `at` e estado tipado. Eventos de início incluem `displayCommand` **sanitizado**; término contém `exitCode`, `durationMs`, `outcome` (`succeeded`, `failed`, `cancelled`, `timed_out`, `reboot_required`, `start_failed`) e eventual resultado posterior `verified`. O status visual `Concluído` exige `verified=true` quando houver pós-condição; caso contrário mostrar `Comando encerrado, verificando` ou motivo apropriado. `start_failed` não gera `command.started`. Duplicatas e eventos fora de ordem devem ser idempotentes pelo identificador e número de sequência; uma conclusão nunca retorna a `running` por evento atrasado.
+Para erro de processo, `command.finished` já permite `✖` sem fingir pós-verificação; **exit 0 nunca é suficiente para `✔`** quando há pós-condição exigida. Falha de spawn gera `start_failed`, sem `command.started`. Recusa de aprovação não executa nem inicia temporizador. Uma tarefa-pai pode apresentar estado agregado de suas ações, mas não deve alegar saber qual comando interno de script opaco está rodando. Use steps ou checkpoints instrumentados caso esse detalhe seja necessário.
 
-Exemplo de evento estruturado, fictício, registrado **uma vez**, não por quadro da animação:
+O envelope de evento contém `schema=ds1.runner.event/v1`, `eventType`, `runId`, `taskId`, `stepId`, `commandId`, `sequence`, `at` e estado tipado. `command.started` contém `displayCommand` e `displayLabel` sanitizados; `command.finished` contém `exitCode`, `durationMs` e resultado do processo, e `command.verified` contém `verified` e diagnóstico de pós-condição. Para um comando já concluído, a duração final não é recalculada por frames. Usar identificadores/sequence para desconsiderar eventos duplicados ou fora de ordem; estados terminais não voltam a `running` por atraso de mensagens.
+
+Exemplo fictício de evento escrito **uma vez**, não por frame:
 
 ```json
-{"schema":"ds1.runner.event/v1","eventType":"command.started","runId":"r-001","taskId":"python@ubuntu","stepId":"install","commandId":"install-01","sequence":1,"at":"2026-10-10T04:00:00Z","displayCommand":"uv tool install specify-cli"}
+{"schema":"ds1.runner.event/v1","eventType":"command.started","runId":"r-001","taskId":"python@ubuntu","stepId":"install","commandId":"install-01","sequence":1,"at":"2026-10-10T04:00:00Z","displayLabel":"Instalando dependências via uv","displayCommand":"uv tool install specify-cli"}
 ```
 
-A UI renderiza frames locais por relógio, mantendo animação durante silêncio de stdout/stderr e para todos os processos vivos identificados. O relógio não é prova de atividade. Em reabertura, consultar processo/supervisor para reconciliar eventos abertos; na impossibilidade, registrar `Interrupted`, não deixar um spinner infinito. Etapas opacas não permitem prometer ícone para cada instrução interna; usar steps separados ou checkpoints instrumentados para esse nível de detalhe. O título do terminal é recurso **opt-in** da UI, não do runner; consultar [padrão visual TUI](tui-windows.md#indicador-animado-de-comandos-em-execução-running).
+A UI renderiza o tempo por relógio monotônico local vinculado ao início da execução real; a duração autoritativa para logs vem do coordenador. O tempo não é heartbeat nem prova de progresso. Ao reiniciar a UI, reconciliar com processo/supervisor e, se impossível, registrar `Interrupted` em vez de manter spinner infinito. Múltiplos comandos concorrentes possuem uma linha/identidade cada; preservar stdout/stderr e logs sem frames de animação. O título do terminal é preferência da UI, não do runner, e deve ser restaurado se alterado.
+
+### Nota sobre o exemplo Bash de spinner
+
+Exemplos com `eval "$cmd" &` são adequados apenas como demonstração visual, **não** como padrão do DS1: `eval` avalia código arbitrário, e `kill -0 $pid` não prova que a operação ainda esteja fazendo progresso ou que sua pós-condição foi satisfeita. O executor seguro recebe programa/argumentos tipados, faz spawn validado, aguarda o processo para obter exit code e repete Test/Verify. É possível simular um comando silencioso com um programa fixo e inofensivo, sem eval e sem instalação real.
 
 ## Adaptadores e semântica de erro
 
