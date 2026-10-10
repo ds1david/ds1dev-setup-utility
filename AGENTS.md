@@ -33,3 +33,6 @@ Usar branch/PR próprios **por fase**. Não avançar se o gate da fase falhar. U
 - Em Windows, executar também testes de bootstrap via `powershell.exe` 5.1.
 - Testes de integração reais somente em VM descartável e com consentimento explícito.
 Documentar evidência, versão, plataforma, número de execuções e pendências no PR.
+## Status Report (opcional)
+
+Se a extensao status-report estiver instalada via Specify, use $speckit-status-report-show --all e $speckit-status-report-show --feature 001. O snapshot specs/spec-status.md e gerado e ignorado pelo Git. O resultado mede presenca de documentos e tarefas marcadas, nao validade dos testes e dos gates. Nao afirmar que a extensao esta instalada so porque tools/install-speckit-status-report.ps1 existe; conferir specify extension list. Consulte docs/speckit-status-report.md.
