@@ -13,7 +13,6 @@
 python tools/check_specs.py
 pwsh -NoProfile -File tests/runbooks.tests.ps1
 cargo test
-python tools/check_specs.py
 ```
 Marcadores como distro/paths devem ser substituídos pelo valor **observado**, nunca assumir valores fixos. A ausência de `cargo`, `docker` ou `gcc` é estado `Blocked/NotInstalled`, não conclusão.
 
@@ -26,6 +25,8 @@ Marcadores como distro/paths devem ser substituídos pelo valor **observado**, n
 6. **AC-009-06:** Rodar fixture inofensiva que dorme por pelo menos 5 segundos sem produzir saída; registrar frames distintos, tempo decorrido, comando sanitizado e troca por status final até o primeiro refresh. Repetir com falha exit code 1, timeout, Ctrl+C, erro de spawn e sucesso de processo com pós-condição falsa.
 7. **AC-009-07:** Rodar em Windows Terminal e Console Host, janelas 80×24 e 120×32; repetir com `DS1_NO_SPINNER=1`, stdout redirecionado e fallback ASCII. Verificar que logs não contêm frames/OSC e que o título original é restaurado quando o recurso estiver ligado.
 8. **AC-009-08:** Simular três comandos concorrentes e eventos duplicados/atrasados. Verificar spinner e duração por comando; finalizar em ordem distinta e comprovar que nenhum indicador ativo fica órfão. Em prompt de confirmação, mostrar `Aguardando ação`, não animação enganosa.
+9. **AC-009-09:** Registrar fixture interativa com 10 frames Braille, intervalo nominal de 80–100 ms, spinner ciano `#00A3FF` ou ANSI ciano, timer cinza/esmaecido e descrição legível atualizados na MESMA linha; verificar final `✔` verde ou `✖` vermelho com causa e duração. Testar monocromático e contraste.
+10. **AC-009-10:** Repetir fluxo `? Confirmar [s/N]` → `⠋ Executando... (4s)` → `◌ Verificando resultado...` → resultado; reprovação/negação não provoca `running` e processo com exit 0 mas pós-checagem negativa nunca recebe `✔`. Testar título ativo/restaurado e modo sem animação.
 
 ## Resistência a falhas
 - Dependência ausente: erro claro, não auto-instalação.
