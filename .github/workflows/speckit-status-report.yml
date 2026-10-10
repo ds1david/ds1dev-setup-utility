@@ -1,0 +1,34 @@
+name: Spec Kit Status Report installer (safe modes)
+on:
+  pull_request:
+    paths:
+      - 'tools/install-speckit-status-report.ps1'
+      - 'docs/speckit-status-report.md'
+      - '.github/workflows/speckit-status-report.yml'
+  push:
+    paths:
+      - 'tools/install-speckit-status-report.ps1'
+      - 'docs/speckit-status-report.md'
+      - '.github/workflows/speckit-status-report.yml'
+jobs:
+  installer-no-side-effects:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test (no installation)
+        shell: pwsh
+        run: ./tools/install-speckit-status-report.ps1 -Mode Test
+      - name: Plan (no installation)
+        shell: pwsh
+        run: ./tools/install-speckit-status-report.ps1 -Mode Plan
+      - name: Ensure no working tree modifications
+        shell: pwsh
+        run: |
+          $dirty = @(git status --porcelain)
+          if ($dirty.Count -gt 0) {
+            $dirty | ForEach-Object { Write-Host $_ }
+            throw 'Test/Plan modified the repository.'
+          }
