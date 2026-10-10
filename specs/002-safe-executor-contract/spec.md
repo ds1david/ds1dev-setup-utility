@@ -13,6 +13,7 @@ O repositório já contém implementação parcial e testes. A entrega desta fas
 - **US1 (P1):** Como usuário padrão quero inspecionar o estado e o plano de instalação sem UAC.
 - **US2 (P2):** Como administrador responsável quero autorizar somente as ações que exigem privilégios.
 - **US3 (P3):** Como criador de runbook quero schema estável, isolamento de caminhos, logs adequados e falhas rastreáveis.
+- **US4 (P2):** Como operador quero identificar visualmente quais comandos estão realmente em execução no runbook, mesmo enquanto não imprimem saída.
 
 ## Requisitos
 - **FR-002-01:** Test/Plan/-List/-Validate não geram mutações observáveis nem elevam processos; instalações somente por Apply e confirmação explícita.
@@ -21,6 +22,8 @@ O repositório já contém implementação parcial e testes. A entrega desta fas
 - **FR-002-04:** Reportar status NotInstalled/Ready/Installed/NeedsReboot/Failed/Blocked ou documentar tradução dos nomes já implementados sem declarar planejado como instalado.
 - **FR-002-05:** Encaminhar stdout/stderr/exit code de processos de forma determinística, redigir segredos e distinguir observação atual do histórico.
 - **FR-002-06:** Blocked para dependência faltante não instala essa dependência automaticamente; Apply revalida e verifica pós-condição.
+- **FR-002-07:** O motor informa início e término efetivos de cada ação instrumentada (incluindo runbook PSD1), com identificadores estáveis `runId/taskId/stepId/commandId`, comando sanitizado, timestamps, duração e resultado. O renderizador provisório PowerShell pode animar um ícone `running` na linha do comando **somente entre início real e término**, sem usar stdout como sinal de atividade. Um bloco opaco sem checkpoints conta como uma única ação, não como comandos internos inventados.
+- **FR-002-08:** A interface atual PowerShell oferece spinner com fallback ASCII/textual quando interativa e suportada; sem console, em transcrição e em logs persistidos registra apenas transições de estado. Encerrar a animação em sucesso, erro, cancelamento, timeout e exceção; espera por autorização/interação é estado distinto. Não exigir Rust nem YAML v2 para oferecer o indicador no executor atual.
 
 ## Critérios de aceite
 - **AC-002-01:** Com usuário padrão e runbooks não implementados, -List/-Plan/-Validate terminam sem UAC, escrita em ProgramData protegido ou outras mutações.
@@ -28,9 +31,11 @@ O repositório já contém implementação parcial e testes. A entrega desta fas
 - **AC-002-03:** Manifesto malicioso ou inválido é rejeitado antes de executar qualquer script.
 - **AC-002-04:** Apply com confirmação recusada não executa ação; Apply permitido verifica estado final e trata falhas de comando nativo.
 - **AC-002-05:** Testes de contrato e de logs demonstram ausência de segredos e distinção de sucesso, parcial, bloqueado e erro.
+- **AC-002-06:** Ação instrumentada em fixture que dura 5 segundos sem stdout mantém `running` e contador na tela; a animação para na conclusão e o ícone final corresponde ao resultado real. Início negado, exceção anterior ao spawn e falta de confirmação nunca exibem execução fictícia.
+- **AC-002-07:** Execução redirecionada, `Start-Transcript`, pipeline e terminal limitado não acumulam frames/escapes no log; sem suporte visual o estado `Em execução` permanece legível. Testar Ctrl+C e timeout sem spinner órfão.
 
 ## Não escopo
-Migração YAML v2, instaladores de ferramentas ou substituição da TUI por Rust.
+Migração YAML v2, instaladores de ferramentas ou substituição da TUI por Rust. O indicador inline desta fase se aplica apenas a ações que o motor atual instrumenta; captura de subprocessos opacos e paralelismo completo são contratos da fase 008.
 
 ## Condições não funcionais e segurança
 - Ações mutáveis somente via confirmação; testes e planos sem efeitos colaterais.
