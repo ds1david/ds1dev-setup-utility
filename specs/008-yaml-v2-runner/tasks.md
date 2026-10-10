@@ -12,7 +12,7 @@
 - [ ] T005 Repetir Apply×2 em ambiente descartável e validar invariantes de compatibilidade.
 
 ## Comprovar conclusão
-- [ ] T006 Executar AC-008-01 até AC-008-06 e registrar resultados redigidos, inclusive ausência de eventos `running` órfãos e captura de eventos durante ausência de stdout.
+- [ ] T006 Executar AC-008-01 até AC-008-07 e registrar resultados redigidos, incluindo distinção entre autorização, execução, verificação, erro, timeout e interrupção; garantir ausência de eventos `running` órfãos durante silêncio de stdout.
 - [ ] T007 Atualizar documentação de runbooks e trilha Notion ↔ Git ↔ testes.
 - [ ] T008 Revisar segurança, logs, rollback, CI e PR da fase antes de avançar.
 
