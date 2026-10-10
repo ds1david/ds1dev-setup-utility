@@ -8,11 +8,11 @@
 - [ ] T003 [P] Implementar fixtures e testes negativos sem efeitos colaterais; incluir processos silenciosos, concorrência, erro de spawn, timeout, cancelamento, redirecionamento de saída e terminal sem Unicode.
 
 ## Entregar incremento utilizável
-- [ ] T004 Implementar fluxo mínimo para entregar: UI navegável e pacote de release verificável com seleção consciente, plano e execução via motor estável; spinner inline por comando, tempo decorrido, status terminal, fallback ASCII/estático, opção `DS1_NO_SPINNER` e título da aba opcional com restauração.
+- [ ] T004 Implementar UI navegável e pacote verificável com plano/consentimento; indicador inline por comando/tarefa com 10 frames Braille, tick de 80–100 ms, spinner ciano `#00A3FF` quando suportado, descrição, timer esmaecido, `?` antes de confirmar, `◌` ao verificar, `✔/✖` após resultado, fallback ASCII/estático/`NO_COLOR`/`DS1_NO_SPINNER` e título da aba restaurável.
 - [ ] T005 Repetir Apply×2 em ambiente descartável e validar invariantes de compatibilidade.
 
 ## Comprovar conclusão
-- [ ] T006 Executar AC-009-01 até AC-009-08, inclusive indicador em comando sem output, estados finais, modo sem animação e logs sem frames, e registrar resultados redigidos.
+- [ ] T006 Executar AC-009-01 até AC-009-10, incluindo precisão nominal do tick (80–100 ms), estilos de cor, descrição/timer, mesma linha, espera por permissão, pós-verificação, erro, fallback acessível e logs sem frames; registrar evidências redigidas.
 - [ ] T007 Atualizar documentação de runbooks e trilha Notion ↔ Git ↔ testes.
 - [ ] T008 Revisar segurança, logs, rollback, CI e PR da fase antes de avançar.
 
