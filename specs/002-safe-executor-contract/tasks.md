@@ -12,7 +12,7 @@
 - [ ] T005 Testar idempotência (Apply×2 quando aplicável), conflito de estado preexistente e falha parcial.
 
 ## Gate C — Verificação e entrega
-- [ ] T006 Validar cenários específicos AC-002-01 a AC-002-07, incluindo animação durante silêncio de saída e desligamento em estados terminais, e anexar evidências de ambiente real/CI.
+- [ ] T006 Validar cenários específicos AC-002-01 a AC-002-08, incluindo spinner Braille ciano a cada 80–100 ms, texto/timer, permissão `[s/N]`, estado verificando, falha com motivo real e fallback acessível, e anexar evidências de ambiente real/CI.
 - [ ] T007 Atualizar documentação local e rastreabilidade com o que está de fato implementado, sem marcar itens pendentes como prontos.
 - [ ] T008 Rodar suíte de regressão do projeto e revisar diffs, logs e exposição de segredos antes do PR.
 
