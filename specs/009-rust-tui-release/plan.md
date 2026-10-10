@@ -19,7 +19,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 2. Modelar estados da UI e fluxo de confirmação com testes de snapshot/unitário.
 3. Revisar ergonomia de terminal (Unicode/resize/cancel) e fallback CLI sem runtime Rust em máquina do usuário.
 4. Construir release reprodutível com hashes e testes E2E em VM descartável.
-5. Implementar no renderer Ratatui o indicador animado por comando, com temporizador local, suporte a múltiplas ações e saída contínua. Gerar animação pela UI a partir de `command.started`/`command.finished`, sem gravar quadros no journal.
+5. Implementar no renderer Ratatui o indicador animado **na mesma linha do comando/tarefa**, alternando 10 quadros Braille a cada 80–100 ms, ciano `#00A3FF` quando disponível, descrição legível e tempo decorrido esmaecido. Reusar estado do runner (`command.started/finished/waiting`, verificação de resultado), sem gravar quadros no journal. Renderizar também múltiplas ações em paralelo e saída contínua.
 6. Reutilizar o mesmo contrato de eventos da TUI PowerShell existente; detectar capacidades de terminal para Braille/fallback ASCII e aceitar `DS1_NO_SPINNER=1`. Tornar alteração do título do Windows Terminal opcional e restaurar o original em todas as saídas.
 
 ## Artefatos existentes a avaliar
@@ -32,7 +32,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 ## Contratos e estrutura a produzir
 - Fluxo de entrada, estados, erro e pós-condições explícitos por runbook/adaptador.
 - Máquina de estados visual por `runId/taskId/stepId/commandId`: aguardando → em execução (spinner) → aguardando ação → retomado → final/verificação → resultado definitivo. Nenhum estado terminal pode retornar para execução por evento atrasado; os estados de erro têm precedência sobre atualizações visuais.
-- Exemplo mínimo: `⠋ [00:00:12] uv tool install specify-cli` e `✓ [00:00:18] ...` após pós-verificação. Título de terminal suportado: `⠋ DS1 em execução — <tarefa>`; sem suporte, apenas indicador inline.
+- Exemplo mínimo: `? Instalar ferramenta? [s/N]` → `⠋ Executando uv tool install specify-cli... (4s)` → `◌ Verificando resultado...` → `✔ Instalação concluída! (5.2s)` ou `✖ Falha ao instalar. (1.1s)`. Manter cor do texto principal, timer em `dim`, spinner ciano, sucesso verde, falha vermelho, opções acessíveis/ASCII e título de terminal suportado `⠋ DS1 — Instalando (4s)`; sem suporte ao título, preservar indicador inline.
 - Testes unitários do contrato, testes de integração em VM e documentação com fontes Notion.
 - Gate com evidência dos AC-009; sem alterações de IDs existentes e sem confundir feature flag com implementação.
 
@@ -42,7 +42,7 @@ Confirmar privilégio mínimo, confirmação, observabilidade, idempotência, fo
 - `python tools/check_specs.py`
 - Ensaiar dois Apply na VM quando houver ação mutável; comparar diffs.
 - Testar confirmação negada, dependência indisponível, falha parcial e logs sem segredo.
-- Testar fixtures sem saída por 5 segundos, três comandos concorrentes, resize, Unicode/ASCII, sem TTY, `DS1_NO_SPINNER=1`, interrupção, timeout, processo inexistente, spinner encerrado no primeiro refresh após evento final, e não vazamento de OSC/frames em logs.
+- Testar fixtures sem saída por 5 segundos, três comandos concorrentes, resize, Unicode/ASCII, sem TTY, `DS1_NO_SPINNER=1`, `NO_COLOR`, interrupção, timeout, processo inexistente, spinner encerrado no primeiro refresh após evento final e não vazamento de OSC/frames em logs. Medir intervalos nominais de 80–100 ms, cor ciano quando disponível, timer crescente e substituição da mesma linha ao concluir; não considerar um vídeo de mock como comprovação do runner.
 
 ## Rollback e implantação
 Manter CLI/TUI PowerShell como fallback, nunca alterar manifests/runbooks por navegação da UI.
