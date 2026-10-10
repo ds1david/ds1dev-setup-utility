@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "status-report": {
+      "version": "1.4.2",
+      "source": "local",
+      "manifest_hash": "sha256:878e99563923ef330a8a794c26799fb4e4f3117b09afa0fd03630e2f9e945a7a",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "codex": [
+          "speckit.status-report.show"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-10-10T03:35:04.628686+00:00"
+    }
+  }
+}

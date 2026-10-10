@@ -1,0 +1,6 @@
+# ============================================================================
+# Cfraphifye per-project data is machine-local and rebuildable.
+# Keep only this policy file in Git.
+# ============================================================================
+*
+!.gitignore
