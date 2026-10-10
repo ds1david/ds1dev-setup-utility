@@ -89,11 +89,11 @@ Ao aplicar, o console de saída ocupa o box principal à direita e substitui a l
 
 ## Padrão visual de execução — spinner, timer e transição de estados
 
-**Especificação, ainda não implementação.** O DS1 deve reproduzir a ergonomia de feedback das CLIs modernas (por exemplo, instalações via \`uv\` e sessões Codex), mas com identidade própria. A linha de status é **dinâmica e persistente**: a mesma linha visual passa de espera para atividade e resultado final; linhas de stdout/stderr do comando são preservadas em painel/log separado, sem misturar frames de animação.
+**Especificação, ainda não implementação.** O DS1 deve reproduzir a ergonomia de feedback das CLIs modernas (por exemplo, instalações via `uv` e sessões Codex), mas com identidade própria. A linha de status é **dinâmica e persistente**: a mesma linha visual passa de espera para atividade e resultado final; linhas de stdout/stderr do comando são preservadas em painel/log separado, sem misturar frames de animação.
 
 ### Exemplo canônico — linha única por comando
 
-\`\`\`text
+```text
 ? Executar migração da tabela users? [s/N]              ← aguardando confirmação
 
 ⠋ Executando migração da tabela users... (4s)          ← execução ativa, spinner ciano
@@ -102,7 +102,7 @@ Ao aplicar, o console de saída ocupa o box principal à direita e substitui a l
 ✔ Migração da tabela users concluída! (5.2s)           ← conclusão validada
 
 ✖ Falha ao conectar ao banco de dados. (1.1s)          ← exemplo de erro
-\`\`\`
+```
 
 Os exemplos acima são **estados alternativos** e frames sucessivos, não cinco linhas a anexar ao log. Quando a aplicação diferencia operação de tarefa/runbook, usar uma linha de resumo da tarefa e uma linha por comando ativo; a linha-pai agrega o estado dos filhos, sem simular execução para ações não iniciadas. Em etapas opacas, só mostrar a etapa inteira, a menos que o próprio script emita checkpoints instrumentados.
 
@@ -110,24 +110,24 @@ Os exemplos acima são **estados alternativos** e frames sucessivos, não cinco 
 
 | Elemento | Estilo de referência | Regra |
 |---|---|---|
-| Spinner | Ciano \`#00A3FF\` / equivalente ANSI ciano | 10 quadros Braille \`⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏\`, alternando a cada **80–100 ms**, limitado a aproximadamente 10–12,5 frames/s enquanto ativo |
-| Texto principal | Cor de primeiro plano do tema, legível | \`Executando <descrição legível>...\`; comando real redigido disponível nos detalhes, nunca exibir token/senha |
-| Metadados | Cinza/esmaecido (\`dim\`) | Tempo decorrido \`(4s)\`, \`(5.2s)\`, \`(1m12s)\`; progresso percentual só se houver fonte real verificável |
-| Aguardando ação | \`?\` neutro ou amarelo | Exibir pergunta e ação padrão segura, como \`[s/N]\`; **não** iniciar spinner antes de consentimento |
-| Concluído | \`✔\` verde + frase conclusiva | Somente depois de \`exitCode=0\` e da pós-verificação exigida; substituir o spinner, manter duração |
-| Erro | \`✖\` vermelho + causa curta | Exibir falha real, duração e código/categoria nos detalhes; nenhuma mensagem genérica que esconda erro |
-| Aguardando/pausado | \`?\` amarelo + \`Aguardando ação\` | Pausar spinner durante prompts/UAC/input que dependam do usuário |
-| Verificando | \`◌\` neutro + \`Verificando resultado...\` | Processo já encerrou, mas pós-condição está pendente; não declarar sucesso antes da verificação |
-| Cancelado/timeout/reinício | \`!\` amarelo + estado explícito | Parar animação; preservar motivo, resultado e próximos passos |
-| Sem TTY/acessibilidade | \`[RUNNING]\`, \`[OK]\`, \`[FAIL]\` | Sem frames repetidos nem dependência de Braille/Nerd Fonts |
+| Spinner | Ciano `#00A3FF` / equivalente ANSI ciano | 10 quadros Braille `⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏`, alternando a cada **80–100 ms**, limitado a aproximadamente 10–12,5 frames/s enquanto ativo |
+| Texto principal | Cor de primeiro plano do tema, legível | `Executando <descrição legível>...`; comando real redigido disponível nos detalhes, nunca exibir token/senha |
+| Metadados | Cinza/esmaecido (`dim`) | Tempo decorrido `(4s)`, `(5.2s)`, `(1m12s)`; progresso percentual só se houver fonte real verificável |
+| Aguardando ação | `?` neutro ou amarelo | Exibir pergunta e ação padrão segura, como `[s/N]`; **não** iniciar spinner antes de consentimento |
+| Concluído | `✔` verde + frase conclusiva | Somente depois de `exitCode=0` e da pós-verificação exigida; substituir o spinner, manter duração |
+| Erro | `✖` vermelho + causa curta | Exibir falha real, duração e código/categoria nos detalhes; nenhuma mensagem genérica que esconda erro |
+| Aguardando/pausado | `?` amarelo + `Aguardando ação` | Pausar spinner durante prompts/UAC/input que dependam do usuário |
+| Verificando | `◌` neutro + `Verificando resultado...` | Processo já encerrou, mas pós-condição está pendente; não declarar sucesso antes da verificação |
+| Cancelado/timeout/reinício | `!` amarelo + estado explícito | Parar animação; preservar motivo, resultado e próximos passos |
+| Sem TTY/acessibilidade | `[RUNNING]`, `[OK]`, `[FAIL]` | Sem frames repetidos nem dependência de Braille/Nerd Fonts |
 
-Ciano \`#00A3FF\` é uma **preferência visual**, não uma exigência de truecolor: quando indisponível, usar a cor ANSI mais próxima; sob \`NO_COLOR\`, usar monocromático, mantendo texto e símbolos de estado. O texto atenuado não deve perder contraste essencial. Os símbolos finais \`✔/✖\` também têm fallback ASCII \`[OK]/[FAIL]\`. Evitar emojis multicoluna; preservar o layout sob fontes e encodings diferentes.
+Ciano `#00A3FF` é uma **preferência visual**, não uma exigência de truecolor: quando indisponível, usar a cor ANSI mais próxima; sob `NO_COLOR`, usar monocromático, mantendo texto e símbolos de estado. O texto atenuado não deve perder contraste essencial. Os símbolos finais `✔/✖` também têm fallback ASCII `[OK]/[FAIL]`. Evitar emojis multicoluna; preservar o layout sob fontes e encodings diferentes.
 
-**Timer:** usar relógio monotônico no processo de renderização, iniciando em \`command.started\` e congelando em \`command.finished\` ou equivalente; não zerar ao redesenhar/rolar. Sugestão: durante a execução mostrar segundos inteiros, ou um decimal quando disponível; após a conclusão, exibir a duração final com até uma casa decimal, e \`m/s\` para períodos longos. O tempo decorrido não prova progresso real nem substitui heartbeat do supervisor.
+**Timer:** usar relógio monotônico no processo de renderização, iniciando em `command.started` e congelando em `command.finished` ou equivalente; não zerar ao redesenhar/rolar. Sugestão: durante a execução mostrar segundos inteiros, ou um decimal quando disponível; após a conclusão, exibir a duração final com até uma casa decimal, e `m/s` para períodos longos. O tempo decorrido não prova progresso real nem substitui heartbeat do supervisor.
 
 ### Máquina de estados canônica
 
-\`\`\`text
+```text
 [?] Aguardando autorização
     ├── Não autorizado ──> [-] Cancelado (sem iniciar o comando)
     └── Autorizado ──> [⠋] Executando (timer + spinner)
@@ -137,21 +137,21 @@ Ciano \`#00A3FF\` é uma **preferência visual**, não uma exigência de truecol
                                                         ├── [✔] Sucesso confirmado
                                                         ├── [✖] Pós-verificação falhou
                                                         └── [!] Reinício necessário
-\`\`\`
+```
 
-Um processo não iniciado, uma falha de spawn ou recusa de consentimento **nunca** ganha spinner fictício. Terminar com código zero não significa, por si, que o runbook alcançou o estado desejado. Eventos tardios/duplicados não podem ressuscitar estados terminais. Em perda de comunicação, reconciliar com o supervisor/processo; se isso falhar, mostrar \`Interrompido/Estado desconhecido\`, não spinner eterno. A interface nunca altera a semântica Test/Plan/Apply/Verify nem mascara falhas.
+Um processo não iniciado, uma falha de spawn ou recusa de consentimento **nunca** ganha spinner fictício. Terminar com código zero não significa, por si, que o runbook alcançou o estado desejado. Eventos tardios/duplicados não podem ressuscitar estados terminais. Em perda de comunicação, reconciliar com o supervisor/processo; se isso falhar, mostrar `Interrompido/Estado desconhecido`, não spinner eterno. A interface nunca altera a semântica Test/Plan/Apply/Verify nem mascara falhas.
 
 ### Renderização no terminal, título e logs
 
-- O renderizador (TUI PowerShell atual ou Rust/Ratatui futuro) processa eventos estruturados \`runId/taskId/stepId/commandId\`; **não** observa \`kill -0\`/stdout como única fonte de verdade e **não** executa strings arbitrárias via \`eval\`, \`bash -c\` ou \`Invoke-Expression\`.
+- O renderizador (TUI PowerShell atual ou Rust/Ratatui futuro) processa eventos estruturados `runId/taskId/stepId/commandId`; **não** observa `kill -0`/stdout como única fonte de verdade e **não** executa strings arbitrárias via `eval`, `bash -c` ou `Invoke-Expression`.
 - Atualizar só as linhas afetadas a cada tick (80–100 ms) e não emitir uma linha nova por frame; não interromper leitura de stdout/stderr, input ou cancelamento. A renderização pode desacelerar em terminais lentos; a execução jamais deve depender do FPS.
 - Suportar várias tarefas simultâneas sem colisão. Quando largura for insuficiente, truncar apenas a descrição visual e manter ícone/estado/timer; caminho e comando completos e **sanitizados** permanecem nos detalhes. Redimensionamentos e saída intensa não podem apagar prompts nem quebrar painel.
-- Durante a execução, se houver suporte detectado e o DS1 controlar a sessão, refletir a tarefa ativa no **título da aba/janela**, por exemplo \`⠋ DS1 — Migração users (4s)\`; o comportamento pode ser desativado e deve restaurar o título anterior em sucesso/erro/Ctrl+C/exceção. A atualização de título não é garantia em todo Windows Terminal/Console Host; no Windows, usar somente mecanismo compatível e nunca injetar OSC quando saída estiver redirecionada. O spinner inline independe do título.
-- PowerShell 5.1 no bootstrap e terminais sem Braille usam spinner ASCII (\`| / - \`), ou estado textual estático se cursor/host não permitir animação. \`DS1_NO_SPINNER=1\`, sem TTY, leitor de tela ou movimento reduzido desativam animação (sem desativar diagnósticos). \`NO_COLOR\` desativa apenas as cores.
-- **Logs persistidos** (\`events.jsonl\`, stdout/stderr, export, transcript) contêm somente transições, tempos, resultados e saída real do processo com segredos redigidos. Frames, retornos de carro usados para redesenhar, códigos ANSI/OSC e títulos de janela não pertencem ao log. Quando \`Start-Transcript\` ou host não permitir separar renderização e transcript com segurança, usar o modo textual estático.
-- Usar \`[s/N]\` somente como exemplo de interação em português: a opção negativa é padrão para ações mutáveis; não pedir/registrar senhas na TUI.
+- Durante a execução, se houver suporte detectado e o DS1 controlar a sessão, refletir a tarefa ativa no **título da aba/janela**, por exemplo `⠋ DS1 — Migração users (4s)`; o comportamento pode ser desativado e deve restaurar o título anterior em sucesso/erro/Ctrl+C/exceção. A atualização de título não é garantia em todo Windows Terminal/Console Host; no Windows, usar somente mecanismo compatível e nunca injetar OSC quando saída estiver redirecionada. O spinner inline independe do título.
+- PowerShell 5.1 no bootstrap e terminais sem Braille usam spinner ASCII (`| / - `), ou estado textual estático se cursor/host não permitir animação. `DS1_NO_SPINNER=1`, sem TTY, leitor de tela ou movimento reduzido desativam animação (sem desativar diagnósticos). `NO_COLOR` desativa apenas as cores.
+- **Logs persistidos** (`events.jsonl`, stdout/stderr, export, transcript) contêm somente transições, tempos, resultados e saída real do processo com segredos redigidos. Frames, retornos de carro usados para redesenhar, códigos ANSI/OSC e títulos de janela não pertencem ao log. Quando `Start-Transcript` ou host não permitir separar renderização e transcript com segurança, usar o modo textual estático.
+- Usar `[s/N]` somente como exemplo de interação em português: a opção negativa é padrão para ações mutáveis; não pedir/registrar senhas na TUI.
 
-**Matriz mínima de aceite:** comando silencioso ≥5 s, tempo crescente e ≥2 quadros distintos; atualização a cada 80–100 ms em host apropriado sem travar a UI; sucesso com verificação, exit 0 mas verificação negativa, falha de spawn, exit 1, timeout, cancelamento, UAC/entrada pendente, dois ou mais comandos concorrentes, resize 80×24/120×32, Windows Terminal/Console Host, sem TTY, \`NO_COLOR\`, \`DS1_NO_SPINNER=1\`, Unicode indisponível, logs sem frames/segredos e restauração de título. Referências: [002](../specs/002-safe-executor-contract/spec.md), [008](../specs/008-yaml-v2-runner/spec.md), [009](../specs/009-rust-tui-release/spec.md).
+**Matriz mínima de aceite:** comando silencioso ≥5 s, tempo crescente e ≥2 quadros distintos; atualização a cada 80–100 ms em host apropriado sem travar a UI; sucesso com verificação, exit 0 mas verificação negativa, falha de spawn, exit 1, timeout, cancelamento, UAC/entrada pendente, dois ou mais comandos concorrentes, resize 80×24/120×32, Windows Terminal/Console Host, sem TTY, `NO_COLOR`, `DS1_NO_SPINNER=1`, Unicode indisponível, logs sem frames/segredos e restauração de título. Referências: [002](../specs/002-safe-executor-contract/spec.md), [008](../specs/008-yaml-v2-runner/spec.md), [009](../specs/009-rust-tui-release/spec.md).
 
 
 ![Console durante a execução](assets/tui-execucao.svg)
