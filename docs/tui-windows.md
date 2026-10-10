@@ -87,6 +87,31 @@ Versões são escolhidas por ferramenta, com provedor, arquitetura e compatibili
 
 Ao aplicar, o console de saída ocupa o box principal à direita e substitui a lista de itens, mantendo resumo do lote e progresso. Exibir comando com argumentos sensíveis ocultos, ambiente, stdout/stderr, resultado e caminho do log. Permitir PageUp/PageDown, voltar ao acompanhamento ao vivo e expandir detalhes. O fim da tarefa nunca fecha a tela automaticamente; falhas preservam contexto e motivo.
 
+## Indicador animado de comandos em execução (`running`)
+
+**Requisito transversal para TUI PowerShell atual e Rust futura; ainda não implementado.** O efeito desejado é semelhante aos indicadores de execução do instalador `uv` e das sessões Codex: uma pequena animação de atividade na **mesma linha do comando**, visível mesmo quando o processo não imprime nada. Não reproduzir literalmente arte ou lógica de outro produto.
+
+Exemplo de apresentação (cada quadro é uma atualização da **mesma** linha, não uma nova linha de log):
+
+```text
+⠋ Em execução  [00:00:12]  uv tool install specify-cli
+⠙ Em execução  [00:00:13]  uv tool install specify-cli
+
+✓ Concluído     [00:00:18]  uv tool install specify-cli
+✗ Falhou (1)    [00:00:04]  gradle build
+! Interrompido  [00:00:09]  wsl --install
+```
+
+1. O motor sinaliza **início real**, atualizações opcionais de estado (incluindo `Aguardando ação`) e **fim definitivo** para cada unidade de execução identificada por `runId/taskId/stepId/commandId`. O estado não deriva do último caractere impresso ou do tempo desde o último log. Uma etapa opaca aparece como **uma etapa**, salvo checkpoints explícitos do próprio script.
+2. A animação percorre `⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏` a ~8–12 quadros/s, **somente enquanto a execução estiver realmente ativa**. Tempo decorrido é calculado por relógio monotônico quando disponível. A frequência deve ser limitada e desacoplada de stdout/stderr; não gerar carga proporcional ao número de linhas impressas. Quando há várias ações simultâneas, cada linha mantém seu próprio estado sem sobrescrever as demais.
+3. Estados finais substituem spinner por marca e mensagem claras: `Concluído` **após pós-verificação**, `Falhou`, `Cancelado`, `Tempo esgotado`, `Reinício necessário` ou `Interrompido`. Saída 0 sem pós-verificação positiva não autoriza sucesso. Enquanto aguarda consentimento/UAC/entrada do usuário, suspender animação e mostrar `Aguardando ação`.
+4. No bootstrap nativo PS5.1, Windows Terminal/Console Host ou terminal sem Braille, usar `| / - \\` ou indicador estático `[RUNNING]`; nenhuma fonte especial é requisito. `DS1_NO_SPINNER=1`, sem TTY, leitor de tela ou opção de movimento reduzido geram estados textuais sem reescrita repetida. `NO_COLOR` elimina cor, mas preserva estado textual. Com resize/scroll/output intenso, o renderer deve reservar/reconciliar a linha ativa sem corromper stdout/stderr.
+5. **Título da aba/janela (opcional):** quando o terminal permitir e a sessão for controlada pelo DS1, atualizar o título para `⠋ DS1 em execução — <tarefa>`, com a mesma fonte de estado do indicador inline. OSC 0/2 só sob detecção de suporte e stdout interativo; restaurar título original em conclusão, falha e encerramento, inclusive exceção/Ctrl+C. Nunca inserir sequências OSC em pipes, transcrições ou logs. Se o título não puder ser controlado, **o indicador na linha continua obrigatório**.
+6. A TUI é **apenas consumidora** dos eventos; não simular progresso percentual nem declarar processo vivo quando ele já terminou. Se o stream cair, houver reinicialização ou o estado real ficar desconhecido, remover animação e mostrar `Estado desconhecido/Interrompido` até reconciliar. Não bloquear cancelamento, entrada de usuário nem pós-verificação para animar.
+7. Históricos `events.jsonl`, transcrição e arquivos exportados registram apenas início, fim, duração, comando sanitizado e resultado (eventos de espera quando pertinentes), **nunca cada frame**. O feedback visual não deve alterar códigos de saída, consentimento, comportamento idempotente nem segredos redigidos.
+
+**Critérios para implementação:** fixture silenciosa por pelo menos 5 segundos; concorrência; sequência Test→Plan→Apply→Verify; erro de spawn, exit code não zero, cancelamento, timeout e crash; Console Host/Windows Terminal, 80×24 e 120×32, sem TTY, saída redirecionada, Unicode indisponível e modo sem animação. O indicador inline precisa atualizar durante o silêncio e cessar até o próximo refresh após o evento final. Vinculado a [002](../specs/002-safe-executor-contract/spec.md), [008](../specs/008-yaml-v2-runner/spec.md) e [009](../specs/009-rust-tui-release/spec.md).
+
 ![Console durante a execução](assets/tui-execucao.svg)
 
 Ctrl+C solicita cancelamento pelo motor. Para operação que não pode ser interrompida com segurança, mostrar “Cancelamento pendente” e não iniciar a próxima tarefa. Não afirmar rollback universal de instaladores. Encerrar processo à força é uma ação separada e explícita.
