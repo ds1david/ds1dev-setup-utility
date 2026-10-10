@@ -1,0 +1,9 @@
+# Snapshot gerado pelo Spec Kit Status Report
+/specs/spec-status.md
+
+# Sobreposicoes locais de extensoes, podem conter segredos
+/.specify/extensions/*/*-config.local.yml
+
+# Ferramentas locais
+__pycache__/
+*.pyc

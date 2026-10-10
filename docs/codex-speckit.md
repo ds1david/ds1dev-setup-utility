@@ -51,3 +51,7 @@ e PowerShell 7, incluindo cancelamento UAC e processo filho travado.
 - Integrações: https://github.com/github/spec-kit/blob/main/docs/reference/integrations.md
 - Não executar `irm ... | iex` em PowerShell elevado. Preferir checkout/release fixados e execução por arquivo.
 - Nesta adoção, o source of truth das implementações é o Git; links Notion trazem requisitos históricos e navegação.
+
+## Status Report
+
+Para acompanhar progresso do backlog, instale a extensao comunitaria status-report 1.4.2 com o [guia de instalacao](speckit-status-report.md) depois de executar specify init e revisar o diff. Ela escreve specs/spec-status.md, arquivo gerado e ignorado pelo Git. O status documental nao equivale a aceitacao das tarefas.

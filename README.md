@@ -81,3 +81,7 @@ Veja [arquitetura](docs/arquitetura-executor.md) para os estados, invariantes e 
 ## Desenvolvimento orientado a specs (Codex)
 
 As specs incrementais, critérios de aceite e gates estão em [`docs/phase-gates.md`](docs/phase-gates.md). Leia [`AGENTS.md`](AGENTS.md), [`docs/codex-speckit.md`](docs/codex-speckit.md) e [rastreabilidade Notion ↔ runbooks](docs/notion-runbook-traceability.md). **A geração das skills oficiais do Spec Kit ainda depende de executar `specify init` localmente**; as specs publicadas não significam que as funcionalidades foram implementadas.
+
+## Progresso das specs com Status Report
+
+A extensao comunitaria Status Report v1.4.2 exibe o progresso documental das fases 001-009 e o proximo comando do workflow no Codex. Para instalar de forma oficial no seu checkout, consulte [o guia e instalador PowerShell](docs/speckit-status-report.md). O instalador esta versionado, mas a extensao ainda depende de execucao local e commit dos artefatos gerados. Ela nao comprova implementacao nem testes dos runbooks.
